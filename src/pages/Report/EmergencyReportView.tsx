@@ -235,7 +235,7 @@ export default function EmergencyReportView({ kind }: EmergencyReportViewProps) 
   const steps = data?.langkah_penanganan?.length
     ? data.langkah_penanganan
     : copy.steps;
-  const analyzedBankContact =
+  const legacyBankContact =
     data?.bank_analysis ??
     data?.bank_contact ??
     (typeof data?.bank === "object" ? data.bank : null) ??
@@ -249,22 +249,17 @@ export default function EmergencyReportView({ kind }: EmergencyReportViewProps) 
         ? { name: data.nama_bank ?? data.bank_korban! }
         : typeof data?.bank === "string"
           ? { name: data.bank }
-          : null) ??
-    data?.official_contact;
+          : null);
   const officialContacts = data?.official_contacts?.length
     ? data.official_contacts
     : data?.official_contact
       ? [data.official_contact]
       : [];
   const contactCandidates =
-    kind === "financial"
-      ? analyzedBankContact
-        ? [analyzedBankContact]
-        : officialContacts.length
-          ? officialContacts
-          : [copy.contact]
-      : officialContacts.length
-        ? officialContacts
+    officialContacts.length > 0
+      ? officialContacts
+      : kind === "financial" && legacyBankContact
+        ? [legacyBankContact]
         : [copy.contact];
 
   const message = [

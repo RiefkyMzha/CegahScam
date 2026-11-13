@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { requestAiService } from "../aiClient";
 import { validateTextFields } from "../validation";
 
 export const reportFinancial = async (req: Request, res: Response) => {
@@ -34,8 +35,12 @@ export const reportFinancial = async (req: Request, res: Response) => {
         return res.status(400).json({ message: validationError });
     }
 
-    if (nominalKerugian === undefined || nominalKerugian === "" || !Number.isFinite(Number(nominalKerugian))) {
+    const nominal = Number(nominalKerugian);
+    if (nominalKerugian == null || nominalKerugian === "" || !Number.isFinite(nominal)) {
         return res.status(400).json({ message: "Nominal kerugian harus berupa angka." });
+    }
+    if (nominal < 0) {
+        return res.status(400).json({ message: "Nominal kerugian tidak boleh negatif." });
     }
 
     const fd = new FormData();
@@ -44,7 +49,7 @@ export const reportFinancial = async (req: Request, res: Response) => {
     fd.append("tanggal_kejadian", String(tanggalKejadian));
     fd.append("tujuan_transaksi", String(tujuanTransaksi));
     fd.append("nomor_rekening_penipu", String(nomorRekening));
-    fd.append("nominal_kerugian", String(Number(nominalKerugian)));
+    fd.append("nominal_kerugian", String(nominal));
     if (namaInstitusi) fd.append("nama_institusi_penipu", String(namaInstitusi));
     if (namaPemilikRekening) fd.append("nama_pemilik_penipu", String(namaPemilikRekening));
     fd.append("kronologi_user", kronologi);
@@ -55,7 +60,7 @@ export const reportFinancial = async (req: Request, res: Response) => {
     );
 
     try {
-        const aiRes = await fetch(
+        const aiResult = await requestAiService(
             `${process.env.AI_SERVICE_URL}/api/v1/emergency/financial`,
             {
                 method: "POST",
@@ -64,16 +69,15 @@ export const reportFinancial = async (req: Request, res: Response) => {
                 },
                 body: fd,
                 signal: AbortSignal.timeout(90_000),
-            }
+            },
+            "Terjadi kesalahan saat mengirim laporan.",
         );
 
-        const data = await aiRes.json();
-
-        if (!aiRes.ok) {
-            return res.status(aiRes.status).json({ message: data.detail || "Terjadi kesalahan saat mengirim laporan." });
+        if (!aiResult.ok) {
+            return res.status(aiResult.status).json({ message: aiResult.message });
         }
 
-        return res.status(200).json(data);
+        return res.status(200).json(aiResult.data);
     } catch (error) {
         console.error("Error reporting financial:", error);
         return res.status(500).json({ message: "Terjadi kesalahan internal server saat mengirim laporan." });
@@ -122,7 +126,7 @@ export const reportData = async (req: Request, res: Response) => {
     );
 
     try {
-        const aiRes = await fetch(
+        const aiResult = await requestAiService(
             `${process.env.AI_SERVICE_URL}/api/v1/emergency/data-breach`,
             {
                 method: "POST",
@@ -131,16 +135,15 @@ export const reportData = async (req: Request, res: Response) => {
                 },
                 body: fd,
                 signal: AbortSignal.timeout(90_000),
-            }
+            },
+            "Terjadi kesalahan saat mengirim laporan.",
         );
 
-        const data = await aiRes.json();
-
-        if (!aiRes.ok) {
-            return res.status(aiRes.status).json({ message: data.detail || "Terjadi kesalahan saat mengirim laporan." });
+        if (!aiResult.ok) {
+            return res.status(aiResult.status).json({ message: aiResult.message });
         }
 
-        return res.status(200).json(data);
+        return res.status(200).json(aiResult.data);
     } catch (error) {
         console.error("Error reporting data:", error);
         return res.status(500).json({ message: "Terjadi kesalahan internal server saat mengirim laporan." });

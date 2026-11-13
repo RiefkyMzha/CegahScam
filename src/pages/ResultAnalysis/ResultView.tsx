@@ -128,7 +128,11 @@ export default function ResultView({ kind }: ResultViewProps) {
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-[#52789A]">
                       <BankIcon className="h-3.5 w-3.5" />
                     </span>
-                    <span className="min-w-0 break-words">{bankName}</span>
+                    <span className="min-w-0 break-words">
+                      {officialContacts.length > 1
+                        ? "Kanal Resmi Bank Terkait"
+                        : bankName}
+                    </span>
                   </div>
 
                   {officialContacts.map((contact, index) => {

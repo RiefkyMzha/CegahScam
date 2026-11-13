@@ -209,7 +209,7 @@ export default function Home() {
               <svg
                 aria-hidden="true"
                 viewBox="0 0 430 430"
-                className="pointer-events-none absolute left-1/2 top-1/2 hidden w-[430px] -translate-x-1/2 -translate-y-1/2 md:block"
+                className="pointer-events-none absolute left-1/2 top-1/2 z-0 block w-full max-w-[430px] -translate-x-1/2 -translate-y-1/2 md:w-[430px]"
               >
                 <circle
                   cx="215"

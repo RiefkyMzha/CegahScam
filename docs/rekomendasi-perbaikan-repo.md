@@ -16,6 +16,7 @@ Acuan pembanding: [`njhbil/CegahScam`](https://github.com/njhbil/CegahScam), bra
 - `UploadField` kini menampilkan preview, nama dan ukuran file, serta tombol hapus.
 - Validasi tipe dan ukuran file tersedia di UI; susunan tombol dan preview dibuat responsif agar tidak keluar dari container pada layar kecil.
 - Input file tetap dapat diakses melalui keyboard.
+- Middleware Multer dipusatkan di `server/src/upload.ts`, menerima `image/jpg`, dan error tipe/ukuran file dikembalikan sebagai respons JSON HTTP 400/413.
 
 ### Form darurat dan validasi kronologi
 
@@ -24,6 +25,8 @@ Acuan pembanding: [`njhbil/CegahScam`](https://github.com/njhbil/CegahScam), bra
 - `emergency.controller.ts` memvalidasi field wajib serta batas panjang payload finansial dan kebocoran data sebelum request ke AI Service. Kronologi kosong/spasi ditolak dengan HTTP 400 dan nilai yang diteruskan sudah di-trim.
 - Batas panjang field teks (termasuk kronologi maksimal 10.000 karakter) diterapkan pada form dan backend agar input yang melampaui skema tidak berakhir sebagai HTTP 422 dari AI Service.
 - `tujuan_transaksi`, `jenis_data`, dan `tindakan_pelaku` dibatasi maksimal 1.000 karakter pada payload form dan backend, mengikuti batas AI Service.
+- Nominal kerugian negatif ditolak sebelum request ke AI Service, sesuai batas minimum nol pada kontraknya.
+- Respons upstream diparsing melalui satu helper; format non-JSON dan detail validasi FastAPI berbentuk array ditangani sebagai pesan JSON yang ramah frontend.
 
 ### Penyelarasan kontrak AI Service
 
@@ -36,6 +39,7 @@ Acuan pembanding: [`njhbil/CegahScam`](https://github.com/njhbil/CegahScam), bra
 
 - Menggabungkan tiga tampilan hasil analisis ke `ResultView` dan memusatkan kategori risiko/skor di `src/lib/risk.ts`.
 - Hasil yang dibuka tanpa state menampilkan empty state dan tombol untuk mengulang analisis, bukan skor risiko default.
+- Laporan memprioritaskan `official_contacts` (termasuk untuk laporan finansial) dan memakai field bank lama hanya sebagai fallback; hasil multi-bank menampilkan label ringkas agar nama bank tidak berulang.
 - Kontak bank memakai WhatsApp bila nomor diawali `62`, dan tautan telepon untuk nomor lainnya. Call center CegahScam ditampilkan terpisah.
 - Mengatur ulang kolom robot dan bubble “Tetap Waspada, Yo!” agar tidak meluber atau berhimpitan dengan kartu checklist.
 
@@ -58,6 +62,7 @@ Acuan pembanding: [`njhbil/CegahScam`](https://github.com/njhbil/CegahScam), bra
 
 - UI bersama dan upload: `src/components/ui/`, `src/App.css`
 - Form serta validasi payload: `src/pages/EmergencyCase/DataBreach.tsx`, `src/pages/EmergencyCase/Financial.tsx`, `server/src/controllers/emergency.controller.ts`, `server/src/validation.ts`
+- Upload dan error API: `server/src/upload.ts`, `server/src/app.ts`, `server/src/aiClient.ts`
 - Penyelarasan endpoint analisis: `src/pages/Analysis/Phone.tsx`, `src/pages/Analysis/Chat.tsx`, `server/src/controllers/analysis.controller.ts`
 - Hasil analisis dan kontak: `src/pages/ResultAnalysis/ResultView.tsx`, `src/pages/Report/EmergencyReportView.tsx`, `src/lib/risk.ts`
 - Home dan Education: `src/pages/Home.tsx`, `src/pages/Education.tsx`

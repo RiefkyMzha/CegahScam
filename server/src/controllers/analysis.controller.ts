@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
+import { requestAiService } from "../aiClient";
 import { validateTextFields } from "../validation";
-
-
 
 export const analyzePhoneNumber = async (req: Request, res: Response) => {
   const { nomorTelepon } = req.body ?? { };
@@ -17,7 +16,7 @@ export const analyzePhoneNumber = async (req: Request, res: Response) => {
   }
 
  try {
-    const aiRes = await fetch(
+    const aiResult = await requestAiService(
       `${process.env.AI_SERVICE_URL}/api/v1/analyze/phone`,
       {
         method: "POST",
@@ -27,16 +26,15 @@ export const analyzePhoneNumber = async (req: Request, res: Response) => {
         },
         body: JSON.stringify({ phone_number : phoneNumber }),
         signal: AbortSignal.timeout(90_000),
-      }
+      },
+      "Terjadi kesalahan saat menganalisis nomor telepon.",
     );
 
-    const data = await aiRes.json();
-
-    if (!aiRes.ok) {
-        return res.status(aiRes.status).json({ message: data.detail || "Terjadi kesalahan saat menganalisis nomor telepon." });
+    if (!aiResult.ok) {
+      return res.status(aiResult.status).json({ message: aiResult.message });
     }
 
-    return res.status(200).json(data);
+    return res.status(200).json(aiResult.data);
   } catch (error) {
     console.error("Error analyzing phone number:", error);
     return res.status(500).json({ message: "Terjadi kesalahan internal server saat menganalisis nomor telepon." });
@@ -66,7 +64,7 @@ export const analyzeChat = async (req: Request, res: Response) => {
   );  
 
   try {
-    const aiRes = await fetch(
+    const aiResult = await requestAiService(
       `${process.env.AI_SERVICE_URL}/api/v1/analyze/text`,
       {
         method: "POST",
@@ -75,15 +73,14 @@ export const analyzeChat = async (req: Request, res: Response) => {
         },
         body: fd,
         signal: AbortSignal.timeout(90_000),
-      }
+      },
+      "Terjadi kesalahan saat menganalisis pesan chat.",
     );
 
-    const data = await aiRes.json();
-
-    if (!aiRes.ok) {
-        return res.status(aiRes.status).json({ message: data.detail || "Terjadi kesalahan saat menganalisis pesan chat." });
+    if (!aiResult.ok) {
+      return res.status(aiResult.status).json({ message: aiResult.message });
     }
-    return res.status(200).json(data);
+    return res.status(200).json(aiResult.data);
   
   } catch (error) {
     console.error("Error analyzing chat message:", error);
@@ -115,7 +112,7 @@ export const analyzeScreenshot = async (req: Request, res: Response) => {
   );  
 
   try {
-    const aiRes = await fetch(
+    const aiResult = await requestAiService(
       `${process.env.AI_SERVICE_URL}/api/v1/analyze/image`,
       {
         method: "POST",
@@ -124,15 +121,14 @@ export const analyzeScreenshot = async (req: Request, res: Response) => {
         },
         body: fd,
         signal: AbortSignal.timeout(90_000),
-      }
+      },
+      "Terjadi kesalahan saat menganalisis tangkapan layar chat.",
     );
 
-    const data = await aiRes.json();
-
-    if (!aiRes.ok) {
-        return res.status(aiRes.status).json({ message: data.detail || "Terjadi kesalahan saat menganalisis platform chat." });
+    if (!aiResult.ok) {
+      return res.status(aiResult.status).json({ message: aiResult.message });
     }
-    return res.status(200).json(data);
+    return res.status(200).json(aiResult.data);
   
   } catch (error) {
     console.error("Error analyzing chat message:", error);
