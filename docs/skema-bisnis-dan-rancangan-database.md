@@ -101,7 +101,6 @@ Terapkan juga batas biaya AI harian/bulanan di sisi backend. Saat batas tercapai
 
 - **PostgreSQL:** akun, paket, pesanan, saldo, ledger kredit, dan metadata penggunaan minimum.
 - **Redis:** entitlement kredit anonim, reservasi anonim, serta rate limit sementara. Aktifkan TTL dan jangan simpan payload analisis. Pastikan konfigurasi persistence/backup Redis sesuai masa retensi yang diumumkan.
-- **AI Service:** tetap menangani cache nomor maksimal 100 entri/24 jam sesuai kebijakan AI Service. Cache tersebut terpisah dari wallet website dan harus diperlakukan sebagai data pseudonim/terbatas, bukan anonim mutlak.
 - **Payment gateway:** menangani detail instrumen pembayaran; website hanya menyimpan ID referensi transaksi dan status, bukan nomor kartu/CVV.
 - Laporan darurat berbantuan AI tidak menggunakan wallet; metadata biaya/volume dapat dicatat secara agregat untuk anggaran tanpa mengaitkan konten laporan ke pengguna.
 
@@ -282,7 +281,6 @@ Operasi pencadangan/pengembalian kredit anonim harus atomik (misalnya Redis Lua 
 Zero retention dalam rancangan ini berlaku untuk **konten pengguna yang dikirim untuk dianalisis**, bukan seluruh data sistem:
 
 - Tidak menyimpan body request, file bukti, nomor telepon, kronologi, prompt, atau hasil AI di PostgreSQL, Redis, log, atau error tracker.
-- Cache nomor di AI Service maksimal 100 entri/24 jam merupakan retensi sementara tersendiri dan perlu disebutkan secara jelas.
 - ID anonim HMAC/Redis memiliki TTL yang diumumkan; data IP rate limit berumur jauh lebih singkat dan tidak dipakai sebagai identitas akun.
 - Metadata penggunaan yang terkait akun dipertahankan hanya selama diperlukan untuk dukungan, rekonsiliasi kredit, dan analisis biaya; setelah itu hapus atau agregasikan.
 - Data pembayaran/akun mengikuti retensi minimum yang diwajibkan payment gateway dan ketentuan hukum.
@@ -320,3 +318,42 @@ Karena website memiliki akun dan transaksi, hindari klaim “tidak menyimpan dat
 - Jumlah kegagalan dan percobaan ulang laporan darurat AI.
 
 Metrik dilaporkan secara agregat dan tidak memerlukan penyimpanan konten analisis.
+
+## 11. Tampilan produk dan cakupan pengembangan
+
+### Tampilan yang perlu dibuat atau ditambahkan
+
+1. **Indikator saldo kredit di navigasi yang sudah ada**
+   - Pengguna anonim melihat sisa kredit gratisnya.
+   - Pengguna terdaftar melihat saldo akun dan akses ke halaman top-up.
+
+2. **Login dan pendaftaran**
+   - Form login, pendaftaran, dan verifikasi akun sesuai metode autentikasi yang dipilih.
+   - Sediakan akses kembali ke halaman analisis setelah proses autentikasi.
+   - Pengguna tetap dapat memakai fitur gratis yang tidak mensyaratkan akun.
+
+3. **Halaman paket kredit**
+   - Menampilkan jumlah kredit, harga, dan tarif kredit per fitur.
+   - Menjelaskan paket yang dipilih sebelum pengguna melanjutkan pembayaran.
+
+4. **Halaman status pembayaran**
+   - Menampilkan status menunggu, berhasil, atau gagal.
+   - Setelah pembayaran terverifikasi, tampilkan saldo kredit terbaru.
+
+5. **Halaman akun dan transaksi**
+   - Menampilkan saldo kredit dan riwayat pembelian/pemakaian secara ringkas.
+   - Menyediakan informasi akun dan tindakan keluar.
+
+### Komponen yang perlu dikembangkan
+
+- **Autentikasi:** pendaftaran, login, sesi aman, verifikasi akun, dan logout.
+- **Wallet kredit:** saldo, ledger, reservasi, penyelesaian biaya setelah analisis berhasil, dan pengembalian reservasi saat gagal.
+- **Kuota anonim:** cookie acak yang aman dan penyimpanan saldo sementara di Redis.
+- **API bisnis:** endpoint akun, saldo, katalog paket, order, riwayat transaksi, serta aturan pencadangan dan pencatatan kredit.
+- **Database:** migrasi PostgreSQL untuk akun, paket, wallet, order, ledger, reservasi, dan agregat penggunaan.
+- **Pembayaran:** integrasi payment gateway, verifikasi webhook, idempotensi, rekonsiliasi, dan alur refund.
+- **Pengendalian biaya:** rate limit, batas anggaran AI, pencatatan biaya agregat, dan alert operasional.
+- **Pengamanan dan privasi:** otorisasi per akun, perlindungan secret, validasi input, serta larangan menyimpan payload analisis.
+- **Pengujian:** saldo tidak negatif, request paralel, pengembalian kredit saat transaksi gagal, webhook duplikat, dan status pembayaran.
+
+Untuk MVP, prioritaskan indikator saldo, login/daftar, wallet dan kuota anonim, serta halaman paket. Integrasikan pembayaran setelah saldo dan pencatatan kredit telah teruji; halaman akun dan riwayat transaksi dapat dikembangkan bersamaan dengan tahap tersebut.
