@@ -1,0 +1,551 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
+
+import pict1 from "../assets/Education/pict1-edu.webp";
+import pict2 from "../assets/Education/pict2-edu.webp";
+import pict3 from "../assets/Education/pict3-edu.webp";
+import foto1 from "../assets/Education/carousel/carousel1.webp";
+import foto2 from "../assets/Education/carousel/carousel2.webp";
+import foto3 from "../assets/Education/carousel/carousel3.webp";
+import foto4 from "../assets/Education/carousel/carousel4.webp";
+import eduRobot from "../assets/Education/edu-robot.webp";
+import robotModus from "../assets/Emergency/robot2.webp";
+import robotChat from "../assets/Emergency/robot1.webp";
+import Robot from "../components/Robot";
+import PageShell from "../components/ui/PageShell";
+import { TextInput } from "../components/ui/Field";
+
+const modus = [
+  {
+    title: "Impersonation",
+    body: "Pelaku berpura-pura menjadi pihak resmi, customer service, teman, atau institusi tertentu untuk mendapatkan kepercayaan korban.",
+  },
+  {
+    title: "Urgency",
+    body: "Pelaku menciptakan situasi mendesak agar korban tidak memiliki waktu untuk berpikir atau melakukan verifikasi.",
+  },
+  {
+    title: "Threat",
+    body: "Pelaku menggunakan rasa takut atau ancaman agar korban mengikuti instruksi yang diberikan.",
+  },
+  {
+    title: "Fake Customer Service",
+    body: "Pelaku menyamar sebagai customer service dari bank, platform, atau layanan tertentu untuk mendapatkan informasi atau membuat korban melakukan tindakan tertentu.",
+  },
+  {
+    title: "Fake Investment",
+    body: "Pelaku menawarkan investasi dengan cara yang dapat membuat korban tertarik untuk memberikan uang atau informasi.",
+  },
+  {
+    title: "Phishing",
+    body: "Pelaku menyamar sebagai pihak terpercaya untuk mengarahkan korban melakukan tindakan tertentu atau memberikan informasi.",
+  },
+];
+
+const glossary = [
+  {
+    term: "Scam",
+    definition:
+      "Penipuan digital untuk mendapatkan uang atau data pribadi dengan cara menipu korban.",
+  },
+  {
+    term: "Phishing",
+    definition:
+      "Jenis scam yang menggunakan pesan, email, atau situs palsu untuk mencuri informasi pribadi.",
+  },
+  {
+    term: "Social Engineering",
+    definition:
+      "Teknik manipulasi psikologis untuk membuat korban memberikan informasi rahasia.",
+  },
+  {
+    term: "OTP (One Time Password)",
+    definition:
+      "Kode verifikasi satu kali untuk mengamankan akun. Jangan pernah membagikannya kepada siapa pun.",
+  },
+  {
+    term: "Malware",
+    definition:
+      "Perangkat lunak berbahaya yang dapat merusak perangkat atau mencuri data.",
+  },
+  {
+    term: "Data Breach",
+    definition:
+      "Kebocoran data pribadi atau sensitif yang bisa disalahgunakan oleh pihak tidak bertanggung jawab.",
+  },
+  {
+    term: "Link Mencurigakan",
+    definition:
+      "Tautan yang dapat mengarahkan ke situs palsu atau menginstal malware di perangkat.",
+  },
+  {
+    term: "Investasi Bodong",
+    definition:
+      "Penawaran investasi palsu dengan iming-iming keuntungan besar dalam waktu singkat.",
+  },
+  {
+    term: "Smishing",
+    definition:
+      "Penipuan melalui pesan singkat yang berisi link palsu atau permintaan informasi pribadi untuk menipu korban.",
+  },
+  {
+    term: "Vishing",
+    definition:
+      "Penipuan melalui panggilan suara ketika pelaku menyamar sebagai pihak resmi dan meminta data atau tindakan tertentu.",
+  },
+  {
+    term: "Spoofing",
+    definition:
+      "Pemalsuan identitas, nomor, alamat email, atau situs agar komunikasi terlihat berasal dari pihak yang tepercaya.",
+  },
+  {
+    term: "Deepfake",
+    definition:
+      "Konten audio, foto, atau video yang dimanipulasi dengan teknologi AI untuk meniru seseorang atau membuat informasi palsu.",
+  },
+  {
+    term: "Ransomware",
+    definition:
+      "Malware yang mengunci atau mengenkripsi file korban lalu meminta tebusan untuk mengembalikan akses.",
+  },
+  {
+    term: "SIM Swap",
+    definition:
+      "Pengambilalihan nomor telepon dengan memindahkannya ke kartu SIM lain untuk menerima kode verifikasi korban.",
+  },
+  {
+    term: "Doxing",
+    definition:
+      "Penyebaran data pribadi seseorang ke publik tanpa izin, seperti alamat, nomor telepon, atau identitas.",
+  },
+  {
+    term: "Two-Factor Authentication (2FA)",
+    definition:
+      "Lapisan keamanan tambahan yang meminta dua bentuk verifikasi saat login, misalnya password dan kode dari authenticator.",
+  },
+  {
+    term: "Password Manager",
+    definition:
+      "Aplikasi untuk menyimpan dan membuat password unik secara aman sehingga kamu tidak perlu memakai password yang sama.",
+  },
+  {
+    term: "Zero-Day",
+    definition:
+      "Celah keamanan yang belum diketahui atau belum memiliki perbaikan resmi ketika mulai dimanfaatkan.",
+  },
+];
+
+const chatExamples = [
+  {
+    image: foto1,
+    alt: "Contoh pola chat scam 1",
+    label: "Hadiah",
+    title: "Hadiah palsu",
+    description:
+      "Pesan mengaku dari program loyalitas dan menjanjikan hadiah Rp2 juta. Korban diarahkan ke link verifikasi lalu diminta menyerahkan data rekening dan kode OTP.",
+    flags: [
+      "Nomor pengirim tidak dikenal.",
+      "Hadiah datang tanpa pernah mengikuti program.",
+      "Diminta mengisi OTP lewat sebuah link.",
+    ],
+    action:
+      "Cek promo lewat aplikasi resmi. OTP tidak pernah diminta siapa pun, termasuk bank.",
+  },
+  {
+    image: foto2,
+    alt: "Contoh pola chat scam 2",
+    label: "Bank",
+    title: "Bank palsu",
+    description:
+      "Pelaku mengaku dari bank dan menyebut ada aktivitas mencurigakan. Korban diminta verifikasi dalam waktu singkat, lalu menyerahkan nomor kartu ATM, PIN, dan OTP.",
+    flags: [
+      "Bank tidak pernah meminta PIN atau OTP lewat chat.",
+      "Nomor pengirim bukan kanal resmi.",
+      "Ada ancaman rekening diblokir.",
+    ],
+    action:
+      "Hubungi call center dari nomor di aplikasi resmi. Jangan klik link atau membalas pesan.",
+  },
+  {
+    image: foto3,
+    alt: "Contoh pola chat scam 3",
+    label: "Marketplace",
+    title: "Marketplace palsu",
+    description:
+      "Pesanan diklaim bermasalah dan korban diarahkan ke domain tiruan seperti t0koped1a.com untuk melakukan konfirmasi pembayaran.",
+    flags: [
+      "Domain tiruan: t0koped1a.com.",
+      "Verifikasi dilakukan di luar aplikasi.",
+      "Pesan dikirim dari nomor pribadi.",
+    ],
+    action:
+      "Buka aplikasi marketplace langsung dan cek menu Pesanan. Jangan login lewat link.",
+  },
+  {
+    image: foto4,
+    alt: "Contoh pola chat scam 4",
+    label: "Kurir",
+    title: "Kurir palsu",
+    description:
+      "Paket diklaim gagal dikirim karena alamat tidak sesuai. Korban diminta membayar biaya admin lewat situs palsu cek-paket.sh0pee-expres.com.",
+    flags: [
+      "Domain tiruan: sh0pee-expres.com.",
+      "Biaya tambahan diminta di luar aplikasi.",
+      "Nomor pengirim tidak dikenal.",
+    ],
+    action:
+      "Cek nomor resi di aplikasi belanja. Biaya kirim ulang yang sah muncul di aplikasi.",
+  },
+];
+
+type SectionHeadingProps = {
+  title: string;
+  description: string;
+};
+
+function SectionHeading({ title, description }: SectionHeadingProps) {
+  return (
+    <div className="mb-8 lg:mb-10">
+      <h2 className="max-w-2xl text-balance text-[26px] font-bold leading-tight tracking-tight text-[#111827] sm:text-[32px] lg:text-[40px]">
+        {title}
+      </h2>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#52789A] lg:text-[15px]">
+        {description}
+      </p>
+    </div>
+  );
+}
+
+export default function Education() {
+  const [query, setQuery] = useState("");
+  const [activeChat, setActiveChat] = useState(0);
+  const [showAll, setShowAll] = useState(false);
+
+  const keyword = query.trim().toLowerCase();
+  const filteredGlossary = keyword
+    ? glossary.filter((item) =>
+        `${item.term} ${item.definition}`.toLowerCase().includes(keyword),
+      )
+    : showAll
+      ? glossary
+      : glossary.slice(0, 6);
+
+  return (
+    <PageShell>
+      <section
+        id="hero-section"
+        className="grid items-center gap-10 lg:min-h-[calc(100dvh_-_18rem)] lg:grid-cols-[1.05fr_0.95fr] lg:gap-x-14 lg:gap-y-7"
+      >
+          <div className="order-1 lg:col-start-1 lg:row-start-1">
+            <h1 className="text-balance text-[30px] font-bold leading-[1.1] tracking-tight text-[#111827] sm:mt-5 sm:text-[36px] lg:text-[40px]">
+              Yuk kenali scam,
+              <span className="block text-[#446685]">sebelum terjadi.</span>
+            </h1>
+
+            <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-[#3F4E5E]">
+              Pelajari cara penipuan bekerja, tanda-tanda yang perlu
+              diperhatikan, dan langkah sederhana untuk melindungi diri.
+            </p>
+          </div>
+
+          <div className="relative order-2 mx-auto w-full max-w-[420px] lg:col-start-2 lg:row-span-2 lg:row-start-1">
+            <div className="absolute -inset-5 -z-10 rounded-[2.5rem] bg-[#A5C6FF]/25 blur-2xl" />
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 sm:grid-rows-2">
+              <figure className="relative col-span-2 aspect-[4/3] overflow-hidden rounded-2xl border border-white/70 shadow-lg sm:col-span-3 sm:row-span-2 sm:aspect-auto">
+                <img
+                  src={pict1}
+                  alt="Panggilan masuk dari nomor tak dikenal di ponsel"
+                  className="h-full w-full object-cover"
+                />
+                <figcaption className="absolute bottom-3 left-3 rounded-full bg-[#111827]/70 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                  Panggilan tak dikenal
+                </figcaption>
+              </figure>
+
+              <figure className="relative col-span-1 aspect-square overflow-hidden rounded-2xl border border-white/70 shadow-lg sm:col-span-2">
+                <img
+                  src={pict3}
+                  alt="Pesan peringatan palsu yang masuk ke ponsel"
+                  className="h-full w-full object-cover"
+                />
+                <figcaption className="absolute bottom-2 left-2 rounded-full bg-[#111827]/70 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
+                  Peringatan palsu
+                </figcaption>
+              </figure>
+
+              <figure className="relative col-span-1 aspect-square overflow-hidden rounded-2xl border border-white/70 shadow-lg sm:col-span-2">
+                <img
+                  src={pict2}
+                  alt="Ilustrasi pelaku membawa data pribadi korban"
+                  className="h-full w-full object-cover"
+                />
+                <figcaption className="absolute bottom-2 left-2 rounded-full bg-[#111827]/70 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
+                  Data dicuri
+                </figcaption>
+              </figure>
+            </div>
+          </div>
+
+          <div className="order-3 flex flex-col gap-3 sm:flex-row lg:col-start-1 lg:row-start-2">
+            <a
+              href="#modus"
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#47a8e4] px-6 py-3 text-center text-sm font-semibold text-white shadow-lg transition hover:bg-[#3b93cc]"
+            >
+              Mulai dari modus terkini
+            </a>
+            <Link
+              to="/analysis"
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#C8D6E3] bg-white px-6 py-3 text-center text-sm font-semibold text-[#2E86B7] transition hover:bg-[#5E83A5] hover:text-white"
+            >
+              Periksa pesan mencurigakan
+            </Link>
+          </div>
+        </section>
+
+        <section
+          id="modus"
+          className="mt-14 scroll-mt-[calc(var(--header-h)+1rem)] lg:mt-16"
+        >
+          <div className="mb-8 flex flex-col items-center gap-6 rounded-[30px] border border-white/70 bg-linear-to-br from-[#EAF6FD] to-white p-5 shadow-sm sm:p-7 lg:mb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:items-center lg:gap-10">
+            <Robot
+              src={robotModus}
+              alt="Maskot CegahScam memeriksa modus scam dengan kaca pembesar"
+              motion="bob"
+              interactive
+              className="w-40 shrink-0 object-contain drop-shadow-xl sm:w-48 lg:mx-auto lg:w-full lg:max-w-[240px]"
+            />
+
+            <div className="text-center lg:text-left">
+              <h2 className="text-balance text-[26px] font-bold leading-tight tracking-tight text-[#111827] sm:text-[32px] lg:text-[36px]">
+                Modus Scam Terkini
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#52789A] lg:text-[15px]">
+                Pelajari bagaimana pelaku menggunakan pesan, akun palsu, link
+                mencurigakan, dan berbagai cara lain untuk memperdaya korban.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {modus.map((item) => (
+              <article
+                key={item.title}
+                className="rounded-2xl border border-white/70 bg-white/65 p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:bg-white hover:shadow-lg sm:p-6"
+              >
+                <h3 className="text-[17px] font-bold leading-snug text-[#111827]">
+                  {item.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-[#3F4E5E]">
+                  {item.body}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section
+          id="pola"
+          className="mt-14 scroll-mt-[calc(var(--header-h)+1rem)] lg:mt-16"
+        >
+          <div className="mb-8 flex flex-col items-center gap-6 rounded-[30px] border border-white/70 bg-linear-to-br from-[#EAF6FD] to-white p-5 shadow-sm sm:p-7 lg:mb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:items-center lg:gap-10">
+            <Robot
+              src={robotChat}
+              alt="Maskot CegahScam menunjukkan contoh pesan scam di ponsel"
+              motion="sway"
+              interactive
+              className="w-40 shrink-0 object-contain drop-shadow-xl sm:w-48 lg:mx-auto lg:w-full lg:max-w-[240px]"
+            />
+
+            <div className="text-center lg:text-left">
+              <h2 className="text-balance text-[26px] font-bold leading-tight tracking-tight text-[#111827] sm:text-[32px] lg:text-[36px]">
+                Pola Chat Scam yang Sering Terjadi
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#52789A] lg:text-[15px]">
+                Beberapa pola chat penipuan, scam, dan phishing yang sering
+                terjadi.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <div className="no-scrollbar flex snap-x gap-x-1 overflow-x-auto border-b border-[#446685]/15">
+              {chatExamples.map((item, index) => {
+                const isActive = activeChat === index;
+
+                return (
+                  <button
+                    key={item.alt}
+                    type="button"
+                    onClick={() => setActiveChat(index)}
+                    aria-pressed={isActive}
+                    className={`relative -mb-px min-h-11 shrink-0 snap-start whitespace-nowrap px-3 pb-3 text-sm font-semibold transition ${
+                      isActive
+                        ? "text-[#111827]"
+                        : "text-[#52789A] hover:text-[#446685]"
+                    }`}
+                  >
+                    {item.label}
+                    {isActive && (
+                      <span className="absolute inset-x-0 bottom-0 h-0.5 bg-[#446685]" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 grid gap-6 sm:grid-cols-[220px_1fr] sm:gap-8">
+              <div className="mx-auto w-full max-w-[220px] overflow-hidden rounded-xl shadow-lg sm:h-full">
+                <img
+                  src={chatExamples[activeChat].image}
+                  alt={chatExamples[activeChat].alt}
+                  className="aspect-[9/18] w-full object-cover object-top sm:h-full"
+                />
+              </div>
+
+              <div className="flex flex-col rounded-2xl bg-white p-5 shadow-sm sm:p-6">
+                <h3 className="text-xl font-bold text-[#111827]">
+                  {chatExamples[activeChat].title}
+                </h3>
+                <p className="mt-2 max-w-xl text-[14px] leading-relaxed text-[#3F4E5E]">
+                  {chatExamples[activeChat].description}
+                </p>
+
+                <div className="mt-5">
+                  <p className="text-[13px] font-bold text-[#111827]">
+                    Tanda bahaya
+                  </p>
+                  <ul className="mt-2 space-y-1.5">
+                    {chatExamples[activeChat].flags.map((flag) => (
+                      <li
+                        key={flag}
+                        className="flex gap-2.5 text-[13px] leading-relaxed text-[#3F4E5E]"
+                      >
+                        <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-[#E11D48]" />
+                        {flag}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="mt-auto pt-5">
+                  <p className="text-[13px] font-bold text-[#111827]">
+                    Yang perlu dilakukan
+                  </p>
+                  <p className="mt-1 max-w-xl text-[13px] leading-relaxed text-[#3F4E5E]">
+                    {chatExamples[activeChat].action}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="glosarium"
+          className="mt-14 scroll-mt-[calc(var(--header-h)+1rem)] lg:mt-16"
+        >
+          <SectionHeading
+            title="Kamus Keamanan Digital"
+            description="Kenali istilah penting seputar penipuan digital agar kamu lebih waspada dan terlindungi."
+          />
+
+          <div className="rounded-3xl border border-white/70 bg-white/55 p-5 shadow-sm sm:p-7">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="relative w-full sm:max-w-sm">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#52789A]"
+                >
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+                </svg>
+                <TextInput
+                  label="Cari istilah keamanan digital"
+                  variant="search"
+                  type="search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Cari istilah, misalnya OTP"
+                  className="pl-10 pr-4"
+                />
+              </div>
+
+              <p className="text-xs text-[#52789A]">
+                Menampilkan{" "}
+                <span className="font-semibold text-[#111827]">
+                  {filteredGlossary.length}
+                </span>{" "}
+                dari {glossary.length} istilah
+                {!keyword && !showAll && " populer"}
+              </p>
+            </div>
+
+            <div id="glossary-list">
+              {filteredGlossary.length > 0 ? (
+                <div className="mt-6 grid gap-x-10 sm:grid-cols-2">
+                  {filteredGlossary.map((item) => (
+                    <div
+                      key={item.term}
+                      className="border-t border-[#446685]/12 py-4"
+                    >
+                      <h3 className="text-[15px] font-bold text-[#111827]">
+                        {item.term}
+                      </h3>
+                      <p className="mt-1 text-[13px] leading-relaxed text-[#3F4E5E]">
+                        {item.definition}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-6 rounded-xl bg-white/70 px-4 py-8 text-center text-sm text-[#52789A]">
+                  Belum ada istilah yang cocok. Coba kata kunci lain.
+                </p>
+              )}
+            </div>
+
+            {!keyword && (
+              <div className="mt-4 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setShowAll((value) => !value)}
+                  aria-expanded={showAll}
+                  aria-controls="glossary-list"
+                  className="min-h-11 rounded-full border border-[#C8D6E3] bg-white px-5 py-2 text-sm font-semibold text-[#2E86B7] transition hover:bg-[#5E83A5] hover:text-white"
+                >
+                  {showAll
+                    ? "Tampilkan lebih sedikit"
+                    : `Tampilkan semua ${glossary.length} istilah`}
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section id="penutup" className="mt-14 lg:mt-16">
+          <div className="relative overflow-hidden rounded-[28px] bg-[#47a8e4] px-6 py-10 text-white shadow-xl sm:px-10 lg:px-14 lg:py-14">
+            <Robot
+              src={eduRobot}
+              alt="Maskot CegahScam"
+              motion="float"
+              interactive
+              className="relative z-10 mx-auto mb-6 w-45 object-contain lg:absolute lg:bottom-0 lg:right-12 lg:mb-0 lg:w-56"
+            />
+
+            <div className="relative z-10 max-w-2xl">
+              <blockquote className="text-[24px] font-bold leading-snug sm:text-[30px] lg:text-[34px]">
+                “Satu ons pencegahan lebih berharga daripada satu pon
+                pengobatan.”
+              </blockquote>
+              <p className="mt-4 text-sm text-white/75">— Benjamin Franklin</p>
+            </div>
+          </div>
+        </section>
+    </PageShell>
+  );
+}
