@@ -23,6 +23,7 @@ Acuan pembanding: [`njhbil/CegahScam`](https://github.com/njhbil/CegahScam), bra
 - Status akses perangkat pada laporan kebocoran data juga wajib dipilih, sesuai kontrak AI Service.
 - `emergency.controller.ts` memvalidasi field wajib serta batas panjang payload finansial dan kebocoran data sebelum request ke AI Service. Kronologi kosong/spasi ditolak dengan HTTP 400 dan nilai yang diteruskan sudah di-trim.
 - Batas panjang field teks (termasuk kronologi maksimal 10.000 karakter) diterapkan pada form dan backend agar input yang melampaui skema tidak berakhir sebagai HTTP 422 dari AI Service.
+- `tujuan_transaksi`, `jenis_data`, dan `tindakan_pelaku` dibatasi maksimal 1.000 karakter pada payload form dan backend, mengikuti batas AI Service.
 
 ### Penyelarasan kontrak AI Service
 

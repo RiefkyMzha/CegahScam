@@ -24,7 +24,7 @@ export const reportFinancial = async (req: Request, res: Response) => {
         { value: jenisBank, label: "Bank/dompet digital korban", maxLength: 100 },
         { value: kanalMedia, label: "Kanal media kejadian", maxLength: 100 },
         { value: tanggalKejadian, label: "Tanggal kejadian", maxLength: 10 },
-        { value: tujuanTransaksi, label: "Tujuan transaksi", maxLength: 200 },
+        { value: tujuanTransaksi, label: "Tujuan transaksi", maxLength: 1_000 },
         { value: nomorRekening, label: "Nomor rekening penipu", maxLength: 50 },
         { value: namaInstitusi, label: "Nama institusi", maxLength: 200, optional: true },
         { value: namaPemilikRekening, label: "Nama pemilik rekening", maxLength: 200, optional: true },
@@ -97,10 +97,10 @@ export const reportData = async (req: Request, res: Response) => {
         typeof detailKronologi === "string" ? detailKronologi.trim() : "";
 
     const validationError = validateTextFields([
-        { value: jenisData, label: "Jenis data", maxLength: 200 },
+        { value: jenisData, label: "Jenis data", maxLength: 1_000 },
         { value: tanggalKejadian, label: "Tanggal kejadian", maxLength: 10 },
         { value: kanalMedia, label: "Kanal media kejadian", maxLength: 100 },
-        { value: tindakanPelaku, label: "Tindakan pelaku", maxLength: 200 },
+        { value: tindakanPelaku, label: "Tindakan pelaku", maxLength: 1_000 },
         { value: kronologi, label: "Detail kronologi", maxLength: 10_000 },
         { value: statusAkses, label: "Status akses", maxLength: 100 },
     ]);

@@ -112,6 +112,7 @@ export default function Financial() {
     setErrors({});
 
     const nextErrors: Errors = {};
+    const tujuanTransaksiPayload = tujuanTransaksi.join(",");
     if (!jenisBank) {
       nextErrors.bank = "Bank / dompet digital korban harus dipilih.";
     } else if (jenisBank === "lainnya" && !jenisBankLain.trim()) {
@@ -121,6 +122,8 @@ export default function Financial() {
     if (!tanggalKejadian) nextErrors.tanggal = "Tanggal kejadian harus diisi.";
     if (tujuanTransaksi.length === 0) {
       nextErrors.tujuan = "Tujuan transaksi harus dipilih.";
+    } else if (tujuanTransaksiPayload.length > 1_000) {
+      nextErrors.tujuan = "Tujuan transaksi maksimal 1.000 karakter.";
     }
     if (!namaInstitusi.trim()) {
       nextErrors.institusi = "Nama institusi harus diisi.";
@@ -152,7 +155,7 @@ export default function Financial() {
     fd.append("jenisBank", bankName);
     fd.append("kanalMedia", kanalMedia);
     fd.append("tanggalKejadian", tanggalKejadian);
-    fd.append("tujuanTransaksi", tujuanTransaksi.join(","));
+    fd.append("tujuanTransaksi", tujuanTransaksiPayload);
     fd.append("namaInstitusi", namaInstitusi);
     fd.append("nomorRekening", nomorRekening);
     fd.append("namaPemilikRekening", namaPemilikRekening);

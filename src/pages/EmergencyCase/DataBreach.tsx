@@ -111,8 +111,15 @@ export default function DataBreach() {
     setErrors({});
 
     const nextErrors: Errors = {};
+    const jenisDataPayload = JSON.stringify(jenisData);
+    const actions = tindakanPelaku.map((value) =>
+      value === "lainnya" ? tindakanLainnya.trim() || "lainnya" : value,
+    );
+    const tindakanPelakuPayload = JSON.stringify(actions);
     if (jenisData.length === 0) {
       nextErrors.jenisData = "Jenis data/akun yang bocor harus dipilih.";
+    } else if (jenisDataPayload.length > 1_000) {
+      nextErrors.jenisData = "Jenis data maksimal 1.000 karakter.";
     }
     if (!tanggalKejadian) {
       nextErrors.tanggal = "Tanggal kejadian harus diisi.";
@@ -122,6 +129,8 @@ export default function DataBreach() {
     }
     if (tindakanPelaku.length === 0) {
       nextErrors.tindakan = "Tindakan pelaku harus dipilih.";
+    } else if (tindakanPelakuPayload.length > 1_000) {
+      nextErrors.tindakan = "Tindakan pelaku maksimal 1.000 karakter.";
     }
     if (!detailKronologi.trim()) {
       nextErrors.kronologi = "Detail kronologi harus diisi.";
@@ -142,15 +151,11 @@ export default function DataBreach() {
 
     setLoading(true);
 
-    const actions = tindakanPelaku.map((value) =>
-      value === "lainnya" ? tindakanLainnya.trim() || "lainnya" : value,
-    );
-
     const fd = new FormData();
-    fd.append("jenisData", JSON.stringify(jenisData));
+    fd.append("jenisData", jenisDataPayload);
     fd.append("tanggalKejadian", tanggalKejadian);
     fd.append("kanalMedia", kanalMedia);
-    fd.append("tindakanPelaku", JSON.stringify(actions));
+    fd.append("tindakanPelaku", tindakanPelakuPayload);
     fd.append("detailKronologi", detailKronologi);
     fd.append("statusAkses", statusAkses);
     if (fileBukti) fd.append("fileBukti", fileBukti);
@@ -281,7 +286,7 @@ export default function DataBreach() {
                     label="Tindakan pelaku lainnya"
                     type="text"
                     name="tindakanLainnya"
-                    maxLength={80}
+                    maxLength={1_000}
                     placeholder="Tulis tindakan pelaku"
                     value={tindakanLainnya}
                     onChange={(e) => setTindakanLainnya(e.target.value)}
