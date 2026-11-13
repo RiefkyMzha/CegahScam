@@ -81,16 +81,18 @@ export default function ResultView({ kind }: ResultViewProps) {
 
   return (
     <PageShell>
-      <div className="mb-2 flex items-center justify-between gap-3">
+      <div className="relative -top-6 mx-auto mb-0 flex w-full flex-col gap-1 lg:block">
         <Link
           to="/analysis"
-          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-[#446685] transition hover:text-[#1E40AF]"
+          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-[#446685] transition hover:text-[#1E40AF] lg:absolute lg:left-0 lg:top-1/2 lg:-translate-y-1/2"
         >
           <span aria-hidden="true">←</span> Analisis lagi
         </Link>
+        <Stepper
+          steps={STEPS}
+          className="my-0 lg:mx-auto"
+        />
       </div>
-
-      <Stepper steps={STEPS} className="mt-0" />
 
       <div className="reveal grid gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-5 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
@@ -281,7 +283,7 @@ export default function ResultView({ kind }: ResultViewProps) {
         </div>
       </section>
 
-      <div className="mt-6 grid items-center gap-8 rounded-4xl px-4 py-6 sm:px-6 lg:grid-cols-[420px_minmax(0,1fr)] lg:gap-10">
+      <div className="mt-6 grid items-center gap-8 rounded-4xl py-6 pl-4 pr-0 sm:pl-6 sm:pr-0 lg:grid-cols-[420px_minmax(0,1fr)] lg:gap-10">
         <div className="relative flex flex-col items-center sm:flex-row sm:items-start sm:justify-center sm:gap-4">
           <Robot
             src={robot}

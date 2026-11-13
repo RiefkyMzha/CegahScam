@@ -15,8 +15,8 @@ export default function Footer() {
         privasi bersama
       </div>
 
-      <div className="mx-auto w-full max-w-[1160px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:justify-between sm:text-left">
+      <div className="mx-auto w-full max-w-[1160px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:justify-between sm:text-left">
           <div className="flex flex-col items-center gap-1.5 sm:items-start">
             <Link
               to="/"
@@ -55,7 +55,7 @@ export default function Footer() {
           </nav>
         </div>
 
-        <hr className="my-6 border-[#AAB5C5]" />
+        <hr className="my-4 border-[#AAB5C5]" />
 
         <p className="flex flex-col items-center gap-1 text-center text-xs leading-relaxed text-[#343B48] sm:flex-row sm:justify-between sm:text-left">
           <span>© 2026 CegahScam. Hak cipta dilindungi.</span>
