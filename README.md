@@ -11,8 +11,6 @@
 Jalankan dari folder induk tempat kedua project akan disimpan:
 
 ```powershell
-New-Item -ItemType Directory -Force -Path .\CegahScamLocal
-Set-Location .\CegahScamLocal
 git clone https://github.com/RiefkyMzha/CegahScam.git .\CegahScam
 git clone https://github.com/RiefkyMzha/ai-service.git .\ai-service
 ```
@@ -30,13 +28,19 @@ CegahScamLocal\
 ### Website dan backend
 
 ```powershell
-Set-Location .\CegahScam
+cd CegahScam
 npm install
-Push-Location .\server
+Copy-Item .env.example .env
+
+cd CegahScam\server
 npm install
-Pop-Location
 
 Copy-Item .env.example .env
+```
+
+```powershell
+cd CegahScam\server
+npm install
 Copy-Item .\server\.env.example .\server\.env
 ```
 
@@ -54,7 +58,7 @@ AI_API_TOKEN=local-dev-token-ganti-ini
 Buka PowerShell baru dari folder `CegahScamLocal`, lalu jalankan:
 
 ```powershell
-Set-Location .\ai-service
+cd ai-service
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 Copy-Item .env.example .env
@@ -87,21 +91,20 @@ Buka tiga PowerShell dari folder `CegahScamLocal`.
 **Terminal 1 — AI Service:**
 
 ```powershell
-Set-Location .\ai-service
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
 ```
 
 **Terminal 2 — backend web:**
 
 ```powershell
-Set-Location .\CegahScam\server
+\CegahScam\server
 npm run dev
 ```
 
 **Terminal 3 — website:**
 
 ```powershell
-Set-Location .\CegahScam
+\CegahScam
 npm run dev
 ```
 
