@@ -51,6 +51,7 @@ type Errors = {
   kanal?: string;
   tanggal?: string;
   tujuan?: string;
+  tujuanLainnya?: string;
   institusi?: string;
   rekening?: string;
   nominal?: string;
@@ -73,6 +74,7 @@ export default function Financial() {
   const [kanalMedia, setKanalMedia] = useState("");
   const [tanggalKejadian, setTanggalKejadian] = useState("");
   const [tujuanTransaksi, setTujuanTransaksi] = useState<string[]>([]);
+  const [tujuanTransaksiLain, setTujuanTransaksiLain] = useState("");
   const [namaInstitusi, setNamaInstitusi] = useState("");
   const [nomorRekening, setNomorRekening] = useState("");
   const [namaPemilikRekening, setNamaPemilikRekening] = useState("");
@@ -96,6 +98,7 @@ export default function Financial() {
       kanal: "section-kanal",
       tanggal: "section-tanggal",
       tujuan: "section-tujuan",
+      tujuanLainnya: "section-tujuan",
       institusi: "section-institusi",
       rekening: "section-institusi",
       nominal: "section-nominal",
@@ -112,7 +115,15 @@ export default function Financial() {
     setErrors({});
 
     const nextErrors: Errors = {};
-    const tujuanTransaksiPayload = tujuanTransaksi.join(",");
+    const tujuanTransaksiPayload = tujuanTransaksi
+      .map((value) =>
+        value === "lainnya"
+          ? tujuanTransaksiLain.trim()
+            ? `lainnya: ${tujuanTransaksiLain.trim()}`
+            : "lainnya"
+          : value,
+      )
+      .join(",");
     if (!jenisBank) {
       nextErrors.bank = "Bank / dompet digital korban harus dipilih.";
     } else if (jenisBank === "lainnya" && !jenisBankLain.trim()) {
@@ -122,6 +133,11 @@ export default function Financial() {
     if (!tanggalKejadian) nextErrors.tanggal = "Tanggal kejadian harus diisi.";
     if (tujuanTransaksi.length === 0) {
       nextErrors.tujuan = "Tujuan transaksi harus dipilih.";
+    } else if (
+      tujuanTransaksi.includes("lainnya") &&
+      !tujuanTransaksiLain.trim()
+    ) {
+      nextErrors.tujuanLainnya = "Jelaskan tujuan transaksi lainnya.";
     } else if (tujuanTransaksiPayload.length > 1_000) {
       nextErrors.tujuan = "Tujuan transaksi maksimal 1.000 karakter.";
     }
@@ -297,9 +313,37 @@ export default function Financial() {
                   if (errors.tujuan) {
                     setErrors((prev) => ({ ...prev, tujuan: undefined }));
                   }
+                  if (errors.tujuanLainnya) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      tujuanLainnya: undefined,
+                    }));
+                  }
                 }}
                 error={errors.tujuan}
-              />
+              >
+                {tujuanTransaksi.includes("lainnya") && (
+                  <TextInput
+                    label="Tujuan transaksi lainnya"
+                    type="text"
+                    name="tujuanTransaksiLain"
+                    maxLength={1_000}
+                    placeholder="Jelaskan tujuan transaksi"
+                    value={tujuanTransaksiLain}
+                    onChange={(e) => {
+                      setTujuanTransaksiLain(e.target.value);
+                      if (errors.tujuanLainnya) {
+                        setErrors((prev) => ({
+                          ...prev,
+                          tujuanLainnya: undefined,
+                        }));
+                      }
+                    }}
+                    error={errors.tujuanLainnya}
+                    containerClassName="mt-2"
+                  />
+                )}
+              </CheckboxGroup>
             </FormSection>
 
             <FormSection
