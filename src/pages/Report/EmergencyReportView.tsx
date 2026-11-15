@@ -4,6 +4,8 @@ import PageShell from "../../components/ui/PageShell";
 import Stepper from "../../components/ui/Stepper";
 import Button from "../../components/ui/Button";
 import Robot from "../../components/Robot";
+import OfficialContacts from "../../components/OfficialContacts";
+import type { OfficialContact } from "../../lib/risk";
 import robotChat from "../../assets/Emergency/robot1.webp";
 import robotMagnifier from "../../assets/Emergency/robot2.webp";
 
@@ -12,17 +14,7 @@ type ActionStep = {
   description: string;
 };
 
-type OfficialContact = {
-  name: string;
-  phone?: string;
-  whatsapp?: string | null;
-};
-
-type BankContact = {
-  name: string;
-  phone?: string;
-  whatsapp?: string | null;
-};
+type BankContact = OfficialContact;
 
 type EmergencyResult = {
   ai_kronologi?: string;
@@ -137,10 +129,6 @@ function escapeHtml(value: string) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
-}
-
-function onlyDigits(value: string) {
-  return value.replace(/\D/g, "");
 }
 
 function formalizeReportText(value: string) {
@@ -295,6 +283,22 @@ export default function EmergencyReportView({ kind }: EmergencyReportViewProps) 
       timeStyle: "short",
     }).format(new Date());
     const reportCode = `CS-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${kind.toUpperCase()}`;
+    const reportContacts = contactCandidates
+      .map((contact) => {
+        const details = [
+          contact.phone && `Telepon: ${contact.phone}`,
+          contact.whatsapp && `WhatsApp: ${contact.whatsapp}`,
+          contact.email && `Email: ${contact.email}`,
+          contact.instagram && `Instagram: ${contact.instagram}`,
+          contact.twitter && `X/Twitter: ${contact.twitter}`,
+        ]
+          .filter(Boolean)
+          .map((detail) => `<li>${escapeHtml(String(detail))}</li>`)
+          .join("");
+
+        return `<li><strong>${escapeHtml(contact.name)}</strong>${details ? `<ul>${details}</ul>` : ""}</li>`;
+      })
+      .join("");
 
     const html = `<!doctype html>
 <html lang="id">
@@ -322,6 +326,9 @@ export default function EmergencyReportView({ kind }: EmergencyReportViewProps) 
   .opening { margin: 0 0 24px; color: #3F4E5E; font-size: 13px; }
   .summary { position: relative; z-index: 1; border: 1px solid #D7E1EA; border-left: 5px solid #5E83A5; border-radius: 10px; padding: 20px 22px; background: #F7FAFD; }
   .summary p { margin: 0; font-size: 14px; white-space: pre-line; }
+  .contacts { margin-top: 24px; border: 1px solid #D7E1EA; border-radius: 10px; padding: 16px 20px; background: #F7FAFD; font-size: 12px; }
+  .contacts ul { margin: 8px 0 0; padding-left: 20px; }
+  .contacts li + li { margin-top: 8px; }
   .notice { margin-top: 22px; padding: 12px 14px; border-radius: 8px; background: #FFF8E7; color: #795E18; font-size: 11px; }
   .footer { position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 20px; margin-top: 70px; padding-top: 14px; border-top: 1px solid #C8D6E3; color: #98A2B3; font-size: 10px; }
   .footer strong { color: #52789A; }
@@ -359,6 +366,11 @@ export default function EmergencyReportView({ kind }: EmergencyReportViewProps) 
     <section class="summary">
       <h2>Berikut Detail Laporan</h2>
       <p>${escapeHtml(summary)}</p>
+    </section>
+
+    <section class="contacts">
+      <h2>Kontak Rujukan</h2>
+      <ul>${reportContacts}</ul>
     </section>
 
     <div class="notice">Demikian laporan ini saya sampaikan. Saya memohon agar laporan ini dapat ditindaklanjuti sesuai prosedur yang berlaku. Atas perhatian dan tindak lanjutnya, saya mengucapkan terima kasih.</div>
@@ -506,54 +518,7 @@ export default function EmergencyReportView({ kind }: EmergencyReportViewProps) 
             </h2>
 
             <div className="mt-4 flex flex-1 flex-col gap-4 rounded-2xl border border-[#D7E1EA] p-4">
-              {contactCandidates.map((reference, index) => {
-                const phone = reference.phone?.trim() ?? "";
-                const number = reference.whatsapp?.trim() || phone;
-                const digits = onlyDigits(number);
-                const contactIsChat = digits.startsWith("62");
-                const contactLink = digits
-                  ? contactIsChat
-                    ? `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
-                    : `tel:${digits}`
-                  : undefined;
-
-                return (
-                  <div
-                    key={`${reference.name}-${index}`}
-                    className="flex flex-col gap-3"
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EAF2FA] text-sm font-bold text-[#52789A]">
-                        {reference.name.charAt(0) || "?"}
-                      </span>
-                      <div className="min-w-0">
-                        <p className="font-bold text-ink-700">
-                          {reference.name}
-                        </p>
-                        {phone && (
-                          <a
-                            href={`tel:${onlyDigits(phone)}`}
-                            className="text-[13px] font-semibold text-[#52789A] hover:underline"
-                          >
-                            {phone}
-                          </a>
-                        )}
-                      </div>
-                    </div>
-
-                    {contactLink && (
-                      <a
-                        href={contactLink}
-                        target={contactIsChat ? "_blank" : undefined}
-                        rel={contactIsChat ? "noopener noreferrer" : undefined}
-                        className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#5E83A5] px-4 py-2 text-center text-[13px] font-bold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-[#4D7090]"
-                      >
-                        Hubungi{contactIsChat ? " lewat WhatsApp" : ""}
-                      </a>
-                    )}
-                  </div>
-                );
-              })}
+              <OfficialContacts contacts={contactCandidates} />
             </div>
 
             <p className="mt-3 text-xs leading-relaxed text-ink-400">

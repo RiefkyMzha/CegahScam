@@ -28,6 +28,9 @@ export type OfficialContact = {
   name: string;
   phone?: string;
   whatsapp?: string | null;
+  email?: string | null;
+  instagram?: string | null;
+  twitter?: string | null;
 };
 
 export const RISK_LEVELS: Record<RiskLevel, RiskInfo> = {

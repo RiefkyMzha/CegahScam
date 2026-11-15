@@ -4,6 +4,7 @@ import Robot from "../../components/Robot";
 import PageShell from "../../components/ui/PageShell";
 import Stepper from "../../components/ui/Stepper";
 import Button from "../../components/ui/Button";
+import OfficialContacts from "../../components/OfficialContacts";
 import robot from "../../assets/Emergency/robot1.webp";
 import { getRisk, getRiskScore, type AnalysisResult } from "../../lib/risk";
 
@@ -122,63 +123,24 @@ export default function ResultView({ kind }: ResultViewProps) {
             </div>
 
             <div className="flex h-full flex-col gap-3 rounded-3xl bg-[#5A87B8] p-5 text-white shadow-lg shadow-[#5A87B8]/30">
-              <p className="text-[13px] font-semibold">Rekomendasi Bank</p>
+              <p className="flex items-center gap-2 text-[13px] font-semibold">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-[#52789A]">
+                  <BankIcon className="h-3.5 w-3.5" />
+                </span>
+                Rekomendasi Bank
+              </p>
 
-              {bankName ? (
+              {officialContacts.length > 0 ? (
                 <div className="flex flex-1 flex-col justify-center gap-2.5 text-xs">
-                  <div className="flex items-center gap-2 font-medium">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-[#52789A]">
-                      <BankIcon className="h-3.5 w-3.5" />
-                    </span>
-                    <span className="min-w-0 break-words">
-                      {officialContacts.length > 1
-                        ? "Kanal Resmi Bank Terkait"
-                        : bankName}
-                    </span>
-                  </div>
-
-                  {officialContacts.map((contact, index) => {
-                    const number =
-                      contact.whatsapp?.trim() || contact.phone?.trim() || "";
-                    const digits = number.replace(/\D/g, "");
-                    const isWhatsApp = digits.startsWith("62");
-                    const href = digits
-                      ? isWhatsApp
-                        ? `https://wa.me/${digits}`
-                        : `tel:${digits}`
-                      : undefined;
-
-                    if (!number) return null;
-
-                    return (
-                      <a
-                        key={`${contact.name}-${index}`}
-                        href={href}
-                        target={isWhatsApp ? "_blank" : undefined}
-                        rel={isWhatsApp ? "noopener noreferrer" : undefined}
-                        className="flex items-center gap-2 font-semibold text-white transition hover:text-[#EAF3FF]"
-                      >
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20">
-                          {isWhatsApp ? (
-                            <WhatsAppIcon className="h-3.5 w-3.5" />
-                          ) : (
-                            <PhoneIcon className="h-3.5 w-3.5" />
-                          )}
-                        </span>
-                        <span className="min-w-0 break-words">
-                          {officialContacts.length > 1
-                            ? `${contact.name}: ${number}`
-                            : number}
-                        </span>
-                        <span className="sr-only">
-                          {isWhatsApp
-                            ? "Hubungi lewat WhatsApp"
-                            : "Hubungi lewat telepon"}
-                        </span>
-                      </a>
-                    );
-                  })}
+                  <OfficialContacts
+                    contacts={officialContacts}
+                    variant="dark"
+                  />
                 </div>
+              ) : bankName ? (
+                <p className="text-xs leading-relaxed text-white/90">
+                  {bankName} · Kanal kontak belum tersedia.
+                </p>
               ) : (
                 <p className="text-xs leading-relaxed text-white/90">
                   Belum ada rekomendasi bank dari hasil analisis.
@@ -379,19 +341,6 @@ function PhoneIcon({ className = "" }: { className?: string }) {
       aria-hidden="true"
     >
       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z" />
-    </svg>
-  );
-}
-
-function WhatsAppIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.15h-.01a8.2 8.2 0 0 1-4.18-1.15l-.3-.18-3.11.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.5.11-.11.25-.29.37-.43.13-.15.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29Z" />
     </svg>
   );
 }

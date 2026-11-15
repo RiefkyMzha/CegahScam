@@ -32,15 +32,19 @@ Acuan pembanding: [`njhbil/CegahScam`](https://github.com/njhbil/CegahScam), bra
 
 - Validasi nomor telepon di frontend dan backend kini hanya menerima format nomor Indonesia yang diterima AI Service (`08…`, `62…`, atau `+62…`); spasi/tanda pemisah dibersihkan sebelum dikirim.
 - Pesan chat dibatasi maksimal 10.000 karakter dan platform screenshot 50 karakter, dengan pemeriksaan backend sebelum meneruskan request.
-- Tipe hasil analisis mencakup `official_contacts`. Halaman hasil analisis dan laporan menampilkan kontak jamak bila tersedia, dengan fallback ke `official_contact` untuk respons lama.
-- Tautan WhatsApp pada kontak laporan hanya digunakan untuk nomor yang setelah dinormalisasi diawali `62`; nomor lainnya membuka aplikasi telepon.
+- Tipe kontak mengikuti kontrak terbaru: `name`, `phone`, `whatsapp`, `email`, `instagram`, dan `twitter`, dengan metadata kanal opsional yang dapat bernilai `null`.
+- Komponen bersama `src/components/OfficialContacts.tsx` menampilkan metadata kontak resmi dan membuat tautan telepon, WhatsApp, email, Instagram, serta X hanya saat nilainya dapat dinormalisasi dengan aman.
+- Field X yang berisi beberapa akun dipisahkan `/` ditampilkan sebagai akun terpisah; metadata yang formatnya tidak dikenali tetap ditampilkan sebagai teks, bukan tautan yang ditebak.
 
 ### Hasil analisis dan kontak
 
 - Menggabungkan tiga tampilan hasil analisis ke `ResultView` dan memusatkan kategori risiko/skor di `src/lib/risk.ts`.
 - Hasil yang dibuka tanpa state menampilkan empty state dan tombol untuk mengulang analisis, bukan skor risiko default.
 - Laporan memprioritaskan `official_contacts` (termasuk untuk laporan finansial) dan memakai field bank lama hanya sebagai fallback; hasil multi-bank menampilkan label ringkas agar nama bank tidak berulang.
-- Kontak bank memakai WhatsApp bila nomor diawali `62`, dan tautan telepon untuk nomor lainnya. Call center CegahScam ditampilkan terpisah.
+- `OfficialContacts` dipakai bersama pada hasil analisis dan laporan darurat; respons lama yang hanya memiliki `official_contact` tetap didukung.
+- Pada kartu rekomendasi bank, ikon tetap ditampilkan di judul, sedangkan nama institusi hanya muncul sekali pada daftar kontak.
+- Laporan darurat yang dicetak/diunduh sebagai PDF kini menyertakan daftar kontak rujukan beserta metadata kanal yang tersedia. Teks laporan untuk disalin/dibagikan tetap berfokus pada kronologi.
+- Call center CegahScam pada hasil analisis tetap ditampilkan terpisah dari kontak resmi yang dikembalikan AI Service.
 - Mengatur ulang kolom robot dan bubble “Tetap Waspada, Yo!” agar tidak meluber atau berhimpitan dengan kartu checklist.
 
 ### Navbar dan halaman konten
@@ -64,6 +68,6 @@ Acuan pembanding: [`njhbil/CegahScam`](https://github.com/njhbil/CegahScam), bra
 - Form serta validasi payload: `src/pages/EmergencyCase/DataBreach.tsx`, `src/pages/EmergencyCase/Financial.tsx`, `server/src/controllers/emergency.controller.ts`, `server/src/validation.ts`
 - Upload dan error API: `server/src/upload.ts`, `server/src/app.ts`, `server/src/aiClient.ts`
 - Penyelarasan endpoint analisis: `src/pages/Analysis/Phone.tsx`, `src/pages/Analysis/Chat.tsx`, `server/src/controllers/analysis.controller.ts`
-- Hasil analisis dan kontak: `src/pages/ResultAnalysis/ResultView.tsx`, `src/pages/Report/EmergencyReportView.tsx`, `src/lib/risk.ts`
+- Hasil analisis dan kontak: `src/components/OfficialContacts.tsx`, `src/pages/ResultAnalysis/ResultView.tsx`, `src/pages/Report/EmergencyReportView.tsx`, `src/lib/risk.ts`
 - Home dan Education: `src/pages/Home.tsx`, `src/pages/Education.tsx`
 - Navbar, privasi, laporan: `src/components/Navbar.tsx`, `src/pages/Privacy.tsx`, `src/pages/Report/EmergencyReportView.tsx`
