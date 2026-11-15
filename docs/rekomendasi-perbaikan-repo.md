@@ -43,7 +43,7 @@ Acuan pembanding: [`njhbil/CegahScam`](https://github.com/njhbil/CegahScam), bra
 - Laporan memprioritaskan `official_contacts` (termasuk untuk laporan finansial) dan memakai field bank lama hanya sebagai fallback; hasil multi-bank menampilkan label ringkas agar nama bank tidak berulang.
 - `OfficialContacts` dipakai bersama pada hasil analisis dan laporan darurat; respons lama yang hanya memiliki `official_contact` tetap didukung.
 - Pada kartu rekomendasi bank, ikon tetap ditampilkan di judul, sedangkan nama institusi hanya muncul sekali pada daftar kontak.
-- Laporan darurat yang dicetak/diunduh sebagai PDF kini menyertakan daftar kontak rujukan beserta metadata kanal yang tersedia. Teks laporan untuk disalin/dibagikan tetap berfokus pada kronologi.
+- Kontak rujukan ditampilkan pada halaman laporan darurat, tetapi tidak disertakan dalam PDF yang diunduh.
 - Call center CegahScam pada hasil analisis tetap ditampilkan terpisah dari kontak resmi yang dikembalikan AI Service.
 - Mengatur ulang kolom robot dan bubble “Tetap Waspada, Yo!” agar tidak meluber atau berhimpitan dengan kartu checklist.
 

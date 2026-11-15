@@ -283,22 +283,6 @@ export default function EmergencyReportView({ kind }: EmergencyReportViewProps) 
       timeStyle: "short",
     }).format(new Date());
     const reportCode = `CS-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${kind.toUpperCase()}`;
-    const reportContacts = contactCandidates
-      .map((contact) => {
-        const details = [
-          contact.phone && `Telepon: ${contact.phone}`,
-          contact.whatsapp && `WhatsApp: ${contact.whatsapp}`,
-          contact.email && `Email: ${contact.email}`,
-          contact.instagram && `Instagram: ${contact.instagram}`,
-          contact.twitter && `X/Twitter: ${contact.twitter}`,
-        ]
-          .filter(Boolean)
-          .map((detail) => `<li>${escapeHtml(String(detail))}</li>`)
-          .join("");
-
-        return `<li><strong>${escapeHtml(contact.name)}</strong>${details ? `<ul>${details}</ul>` : ""}</li>`;
-      })
-      .join("");
 
     const html = `<!doctype html>
 <html lang="id">
@@ -326,9 +310,6 @@ export default function EmergencyReportView({ kind }: EmergencyReportViewProps) 
   .opening { margin: 0 0 24px; color: #3F4E5E; font-size: 13px; }
   .summary { position: relative; z-index: 1; border: 1px solid #D7E1EA; border-left: 5px solid #5E83A5; border-radius: 10px; padding: 20px 22px; background: #F7FAFD; }
   .summary p { margin: 0; font-size: 14px; white-space: pre-line; }
-  .contacts { margin-top: 24px; border: 1px solid #D7E1EA; border-radius: 10px; padding: 16px 20px; background: #F7FAFD; font-size: 12px; }
-  .contacts ul { margin: 8px 0 0; padding-left: 20px; }
-  .contacts li + li { margin-top: 8px; }
   .notice { margin-top: 22px; padding: 12px 14px; border-radius: 8px; background: #FFF8E7; color: #795E18; font-size: 11px; }
   .footer { position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 20px; margin-top: 70px; padding-top: 14px; border-top: 1px solid #C8D6E3; color: #98A2B3; font-size: 10px; }
   .footer strong { color: #52789A; }
@@ -366,11 +347,6 @@ export default function EmergencyReportView({ kind }: EmergencyReportViewProps) 
     <section class="summary">
       <h2>Berikut Detail Laporan</h2>
       <p>${escapeHtml(summary)}</p>
-    </section>
-
-    <section class="contacts">
-      <h2>Kontak Rujukan</h2>
-      <ul>${reportContacts}</ul>
     </section>
 
     <div class="notice">Demikian laporan ini saya sampaikan. Saya memohon agar laporan ini dapat ditindaklanjuti sesuai prosedur yang berlaku. Atas perhatian dan tindak lanjutnya, saya mengucapkan terima kasih.</div>
