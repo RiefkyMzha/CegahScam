@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { getLocalDateInputValue } from "../../lib/date";
 import EmergencyHook from "../../components/EmergencyHook";
 import PageShell from "../../components/ui/PageShell";
 import Stepper from "../../components/ui/Stepper";
@@ -61,7 +62,7 @@ type Errors = {
   form?: string;
 };
 
-const today = new Date().toISOString().slice(0, 10);
+const today = getLocalDateInputValue();
 
 export default function DataBreach() {
   const [fileBukti, setFileBukti] = useState<File | null>(null);

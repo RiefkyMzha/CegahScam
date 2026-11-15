@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { getLocalDateInputValue } from "../../lib/date";
 import EmergencyHook from "../../components/EmergencyHook";
 import PageShell from "../../components/ui/PageShell";
 import Stepper from "../../components/ui/Stepper";
@@ -39,10 +40,10 @@ const CHANNELS = [
 ];
 
 const PURPOSES = [
-  { value: "link", label: "Pembelian barang/jasa" },
-  { value: "data-pribadi", label: "Biaya administrasi" },
-  { value: "otp", label: "Hadiah/promo" },
-  { value: "menyamar", label: "Pinjaman" },
+  { value: "Pembelian barang/jasa", label: "Pembelian barang/jasa" },
+  { value: "Biaya administrasi", label: "Biaya administrasi" },
+  { value: "Hadiah/promo", label: "Hadiah/promo" },
+  { value: "Pinjaman", label: "Pinjaman" },
   { value: "lainnya", label: "Lainnya" },
 ];
 
@@ -60,7 +61,7 @@ type Errors = {
   form?: string;
 };
 
-const today = new Date().toISOString().slice(0, 10);
+const today = getLocalDateInputValue();
 
 function formatRupiah(digits: string) {
   if (!digits) return "";
@@ -119,7 +120,7 @@ export default function Financial() {
       .map((value) =>
         value === "lainnya"
           ? tujuanTransaksiLain.trim()
-            ? `lainnya: ${tujuanTransaksiLain.trim()}`
+            ? `Lainnya: ${tujuanTransaksiLain.trim()}`
             : "lainnya"
           : value,
       )

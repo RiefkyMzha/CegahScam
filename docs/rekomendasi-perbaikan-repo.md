@@ -25,6 +25,7 @@ Acuan pembanding: [`njhbil/CegahScam`](https://github.com/njhbil/CegahScam), bra
 - `emergency.controller.ts` memvalidasi field wajib serta batas panjang payload finansial dan kebocoran data sebelum request ke AI Service. Kronologi kosong/spasi ditolak dengan HTTP 400 dan nilai yang diteruskan sudah di-trim.
 - Batas panjang field teks (termasuk kronologi maksimal 10.000 karakter) diterapkan pada form dan backend agar input yang melampaui skema tidak berakhir sebagai HTTP 422 dari AI Service.
 - `tujuan_transaksi`, `jenis_data`, dan `tindakan_pelaku` dibatasi maksimal 1.000 karakter pada payload form dan backend, mengikuti batas AI Service.
+- Nilai tujuan transaksi finansial kini dikirim sesuai keterangan pilihan yang terlihat pengguna; pilihan "Lainnya" menyertakan teks penjelasannya.
 - Nominal kerugian negatif ditolak sebelum request ke AI Service, sesuai batas minimum nol pada kontraknya.
 - Respons upstream diparsing melalui satu helper; format non-JSON dan detail validasi FastAPI berbentuk array ditangani sebagai pesan JSON yang ramah frontend.
 
@@ -59,6 +60,7 @@ Acuan pembanding: [`njhbil/CegahScam`](https://github.com/njhbil/CegahScam), bra
 
 - Integrasikan komponen bersama per area, pertahankan palette asli, lalu uji tampilan di mobile dan desktop.
 - Pertahankan validasi field wajib, format nomor, dan batas panjang UI/backend agar tetap selaras dengan schema AI Service saat kontrak berubah.
+- Perbaiki payload form kebocoran data: `jenis_data` dan `tindakan_pelaku` saat ini dikirim sebagai string JSON berisi kode internal, sedangkan `status_akses` dikirim sebagai kode camelCase. Petakan nilai pilihan ke label yang jelas sebelum dikirim agar AI menerima makna pilihan pengguna, bukan kode UI; pertahankan tipe string yang diminta endpoint.
 - Uji upload, state kosong hasil analisis, respons yang berisi satu atau beberapa kontak, tautan kontak, dan semua interaksi menu mobile.
 - Pastikan nomor kontak dan isi halaman privasi sesuai layanan yang benar sebelum dirilis.
 
