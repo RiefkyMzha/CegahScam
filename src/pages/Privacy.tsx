@@ -7,7 +7,7 @@ const SECTIONS = [
   },
   {
     title: "Penyimpanan data",
-    body: "Data yang kamu kirim tidak disimpan permanen di perangkatmu setelah sesi selesai. Halaman hasil hanya menampilkan data dari permintaan yang baru kamu kirim, sehingga memuat ulang halaman akan mengosongkannya.",
+    body: "Isian teks formulir yang belum dikirim disimpan sementara di penyimpanan sesi browser pada tab ini agar bisa dipulihkan setelah halaman dimuat ulang. Draf dihapus setelah pengiriman berhasil atau saat sesi tab berakhir; file bukti tidak disimpan dan harus dipilih ulang. Konten analisis tidak disimpan di database atau Redis.",
   },
   {
     title: "Berbagi data",

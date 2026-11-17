@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import AnalysisHook from "../../components/AnalysisHook";
+import BackLink from "../../components/BackLink";
+import DraftRestoredNotice from "../../components/DraftRestoredNotice";
 import PageShell from "../../components/ui/PageShell";
 import Stepper from "../../components/ui/Stepper";
 import FormSection from "../../components/ui/FormSection";
@@ -9,6 +11,20 @@ import UploadField from "../../components/ui/UploadField";
 import Button from "../../components/ui/Button";
 import { apiUrl } from "../../lib/api";
 import LoadingOverlay from "../../components/LoadingOverlay";
+import {
+  clearSessionDraft,
+  getSessionDraftLeaveWarning,
+  hasSessionDraftContent,
+  readSessionDraft,
+  useBeforeUnloadWarning,
+  useSessionDraftWriter,
+} from "../../lib/sessionDraft";
+
+type ChatDraft = {
+  pesan: string;
+};
+
+const DRAFT_KEY = "analysis-chat";
 
 const STEPS = [
   { label: "Pilih Kasus", state: "done" as const },
@@ -17,8 +33,12 @@ const STEPS = [
 ];
 
 export default function Chat() {
+  const [draftState] = useState(() => readSessionDraft<ChatDraft>(DRAFT_KEY));
+  const draft = draftState.value;
   const [fileBukti, setFileBukti] = useState<File | null>(null);
-  const [pesan, setPesan] = useState("");
+  const [pesan, setPesan] = useState(
+    typeof draft?.pesan === "string" ? draft.pesan : "",
+  );
   const [errors, setErrors] = useState<{
     pesan?: string;
     file?: string;
@@ -26,6 +46,20 @@ export default function Chat() {
   }>({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const isDirty = Boolean(pesan || fileBukti);
+  const writeError = useSessionDraftWriter(DRAFT_KEY, { pesan });
+  const storageError = draftState.error || writeError;
+  const restoredDraft = hasSessionDraftContent(draft);
+
+  useBeforeUnloadWarning(isDirty);
+
+  function discardDraft() {
+    if (!clearSessionDraft(DRAFT_KEY)) return false;
+    setPesan("");
+    setFileBukti(null);
+    setErrors({});
+    return true;
+  }
 
   async function submitForm(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -62,7 +96,10 @@ export default function Chat() {
           data.message || "Terjadi kesalahan saat mengirim laporan.",
         );
       }
-      navigate("/analysis/resultchat", { state: { result: data } });
+      const draftCleanupError = !clearSessionDraft(DRAFT_KEY);
+      navigate("/analysis/resultchat", {
+        state: { result: data, subject: pesan, draftCleanupError },
+      });
     } catch (error) {
       setErrors({
         form:
@@ -82,6 +119,16 @@ export default function Chat() {
       <PageShell>
         <AnalysisHook />
         <Stepper steps={STEPS} />
+        <div className="mb-3 flex items-center justify-between gap-4">
+          <BackLink
+            to="/analysis"
+            label="Analisis"
+            compact
+            confirmMessage={
+              isDirty ? getSessionDraftLeaveWarning(storageError, true) : undefined
+            }
+          />
+        </div>
 
         <section id="body-input" className="reveal form-card">
           <div id="title" className="form-title">
@@ -89,6 +136,13 @@ export default function Chat() {
           </div>
 
           <form className="form-body" onSubmit={submitForm} noValidate>
+            {(restoredDraft || storageError) && (
+              <DraftRestoredNotice
+                savedAt={restoredDraft ? draftState.savedAt : null}
+                onDiscard={discardDraft}
+                storageError={storageError}
+              />
+            )}
             <FormSection
               index={1}
               title="Pesan"

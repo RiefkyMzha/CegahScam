@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import AnalysisHook from "../../components/AnalysisHook";
+import BackLink from "../../components/BackLink";
+import DraftRestoredNotice from "../../components/DraftRestoredNotice";
 import PageShell from "../../components/ui/PageShell";
 import Stepper from "../../components/ui/Stepper";
 import FormSection from "../../components/ui/FormSection";
@@ -9,6 +11,14 @@ import UploadField from "../../components/ui/UploadField";
 import Button from "../../components/ui/Button";
 import { apiUrl } from "../../lib/api";
 import LoadingOverlay from "../../components/LoadingOverlay";
+import {
+  clearSessionDraft,
+  getSessionDraftLeaveWarning,
+  hasSessionDraftContent,
+  readSessionDraft,
+  useBeforeUnloadWarning,
+  useSessionDraftWriter,
+} from "../../lib/sessionDraft";
 
 const STEPS = [
   { label: "Pilih Kasus", state: "done" as const },
@@ -21,9 +31,21 @@ const PLATFORMS = [
   { value: "instagram", label: "Instagram" },
 ];
 
+type ScreenshotDraft = {
+  platform: string;
+};
+
+const DRAFT_KEY = "analysis-screenshot";
+
 export default function Screenshot() {
+  const [draftState] = useState(
+    () => readSessionDraft<ScreenshotDraft>(DRAFT_KEY),
+  );
+  const draft = draftState.value;
   const [fileBukti, setFileBukti] = useState<File | null>(null);
-  const [platform, setPlatform] = useState("");
+  const [platform, setPlatform] = useState(
+    typeof draft?.platform === "string" ? draft.platform : "",
+  );
   const [errors, setErrors] = useState<{
     platform?: string;
     file?: string;
@@ -31,6 +53,20 @@ export default function Screenshot() {
   }>({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const isDirty = Boolean(platform || fileBukti);
+  const writeError = useSessionDraftWriter(DRAFT_KEY, { platform });
+  const storageError = draftState.error || writeError;
+  const restoredDraft = hasSessionDraftContent(draft);
+
+  useBeforeUnloadWarning(isDirty);
+
+  function discardDraft() {
+    if (!clearSessionDraft(DRAFT_KEY)) return false;
+    setPlatform("");
+    setFileBukti(null);
+    setErrors({});
+    return true;
+  }
 
   async function submitForm(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -67,7 +103,16 @@ export default function Screenshot() {
           data.message || "Terjadi kesalahan saat mengirim laporan.",
         );
       }
-      navigate("/analysis/resultscreenshot", { state: { result: data } });
+      const selectedPlatform =
+        PLATFORMS.find((item) => item.value === platform)?.label ?? platform;
+      const draftCleanupError = !clearSessionDraft(DRAFT_KEY);
+      navigate("/analysis/resultscreenshot", {
+        state: {
+          result: data,
+          subject: `Platform: ${selectedPlatform}`,
+          draftCleanupError,
+        },
+      });
     } catch (error) {
       setErrors({
         form:
@@ -87,6 +132,14 @@ export default function Screenshot() {
       <PageShell>
         <AnalysisHook />
         <Stepper steps={STEPS} />
+        <div className="mb-3 flex items-center justify-between gap-4">
+          <BackLink
+            to="/analysis"
+            label="Analisis"
+            compact
+            confirmMessage={isDirty ? getSessionDraftLeaveWarning(storageError, true) : undefined}
+          />
+        </div>
 
         <section id="body-input" className="reveal form-card">
           <div id="title" className="form-title">
@@ -94,6 +147,13 @@ export default function Screenshot() {
           </div>
 
           <form className="form-body" onSubmit={submitForm} noValidate>
+            {(restoredDraft || storageError) && (
+              <DraftRestoredNotice
+                savedAt={restoredDraft ? draftState.savedAt : null}
+                onDiscard={discardDraft}
+                storageError={storageError}
+              />
+            )}
             <FormSection
               index={1}
               title="Platform / Aplikasi"

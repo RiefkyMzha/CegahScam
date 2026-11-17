@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { getLocalDateInputValue } from "../../lib/date";
+import BackLink from "../../components/BackLink";
+import DraftRestoredNotice from "../../components/DraftRestoredNotice";
 import EmergencyHook from "../../components/EmergencyHook";
 import PageShell from "../../components/ui/PageShell";
 import Stepper from "../../components/ui/Stepper";
@@ -16,6 +18,14 @@ import UploadField from "../../components/ui/UploadField";
 import Button from "../../components/ui/Button";
 import { apiUrl } from "../../lib/api";
 import LoadingOverlay from "../../components/LoadingOverlay";
+import {
+  clearSessionDraft,
+  getSessionDraftLeaveWarning,
+  hasSessionDraftContent,
+  readSessionDraft,
+  useBeforeUnloadWarning,
+  useSessionDraftWriter,
+} from "../../lib/sessionDraft";
 
 const STEPS = [
   { label: "Pilih Kasus", state: "done" as const },
@@ -62,20 +72,85 @@ type Errors = {
   form?: string;
 };
 
+type DataBreachDraft = {
+  jenisData: string[];
+  tanggalKejadian: string;
+  kanalMedia: string;
+  tindakanPelaku: string[];
+  tindakanLainnya: string;
+  detailKronologi: string;
+  statusAkses: string;
+};
+
+const DRAFT_KEY = "emergency-data-breach";
 const today = getLocalDateInputValue();
 
 export default function DataBreach() {
+  const [draftState] = useState(
+    () => readSessionDraft<DataBreachDraft>(DRAFT_KEY),
+  );
+  const draft = draftState.value;
   const [fileBukti, setFileBukti] = useState<File | null>(null);
-  const [jenisData, setJenisData] = useState<string[]>([]);
-  const [tanggalKejadian, setTanggalKejadian] = useState("");
-  const [kanalMedia, setKanalMedia] = useState("");
-  const [tindakanPelaku, setTindakanPelaku] = useState<string[]>([]);
-  const [tindakanLainnya, setTindakanLainnya] = useState("");
-  const [detailKronologi, setDetailKronologi] = useState("");
-  const [statusAkses, setStatusAkses] = useState("");
+  const [jenisData, setJenisData] = useState<string[]>(
+    Array.isArray(draft?.jenisData) ? draft.jenisData : [],
+  );
+  const [tanggalKejadian, setTanggalKejadian] = useState(
+    typeof draft?.tanggalKejadian === "string" ? draft.tanggalKejadian : "",
+  );
+  const [kanalMedia, setKanalMedia] = useState(
+    typeof draft?.kanalMedia === "string" ? draft.kanalMedia : "",
+  );
+  const [tindakanPelaku, setTindakanPelaku] = useState<string[]>(
+    Array.isArray(draft?.tindakanPelaku) ? draft.tindakanPelaku : [],
+  );
+  const [tindakanLainnya, setTindakanLainnya] = useState(
+    typeof draft?.tindakanLainnya === "string" ? draft.tindakanLainnya : "",
+  );
+  const [detailKronologi, setDetailKronologi] = useState(
+    typeof draft?.detailKronologi === "string" ? draft.detailKronologi : "",
+  );
+  const [statusAkses, setStatusAkses] = useState(
+    typeof draft?.statusAkses === "string" ? draft.statusAkses : "",
+  );
   const [errors, setErrors] = useState<Errors>({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const isDirty = Boolean(
+    fileBukti ||
+      jenisData.length ||
+      tanggalKejadian ||
+      kanalMedia ||
+      tindakanPelaku.length ||
+      tindakanLainnya ||
+      detailKronologi ||
+      statusAkses,
+  );
+  const writeError = useSessionDraftWriter(DRAFT_KEY, {
+    jenisData,
+    tanggalKejadian,
+    kanalMedia,
+    tindakanPelaku,
+    tindakanLainnya,
+    detailKronologi,
+    statusAkses,
+  });
+  const storageError = draftState.error || writeError;
+  const restoredDraft = hasSessionDraftContent(draft);
+  useBeforeUnloadWarning(isDirty);
+
+  function discardDraft() {
+    if (!clearSessionDraft(DRAFT_KEY)) return false;
+    setJenisData([]);
+    setTanggalKejadian("");
+    setKanalMedia("");
+    setTindakanPelaku([]);
+    setTindakanLainnya("");
+    setDetailKronologi("");
+    setStatusAkses("");
+    setFileBukti(null);
+    setErrors({});
+    return true;
+  }
 
   function toggleJenisData(value: string) {
     setJenisData((prev) =>
@@ -173,7 +248,10 @@ export default function DataBreach() {
           data.message || "Terjadi kesalahan saat mengirim laporan.",
         );
       }
-      navigate("/report/data", { state: { result: data } });
+      const draftCleanupError = !clearSessionDraft(DRAFT_KEY);
+      navigate("/report/data", {
+        state: { result: data, draftCleanupError },
+      });
     } catch (error) {
       setErrors({
         form:
@@ -193,6 +271,14 @@ export default function DataBreach() {
       <PageShell>
         <EmergencyHook />
         <Stepper steps={STEPS} />
+        <div className="mb-3 flex items-center justify-between gap-4">
+          <BackLink
+            to="/emergency"
+            label="Darurat"
+            compact
+            confirmMessage={isDirty ? getSessionDraftLeaveWarning(storageError, true) : undefined}
+          />
+        </div>
 
         <section id="body-input" className="reveal form-card">
           <div id="title" className="form-title">
@@ -200,6 +286,13 @@ export default function DataBreach() {
           </div>
 
           <form className="form-body" onSubmit={submitForm} noValidate>
+            {(restoredDraft || storageError) && (
+              <DraftRestoredNotice
+                savedAt={restoredDraft ? draftState.savedAt : null}
+                onDiscard={discardDraft}
+                storageError={storageError}
+              />
+            )}
             <FormSection
               id="section-jenis-data"
               index={1}

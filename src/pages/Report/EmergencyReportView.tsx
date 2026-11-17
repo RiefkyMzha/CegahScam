@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import PageShell from "../../components/ui/PageShell";
-import Stepper from "../../components/ui/Stepper";
+import ResultStepperBar from "../../components/ui/ResultStepperBar";
 import Button from "../../components/ui/Button";
 import Robot from "../../components/Robot";
 import OfficialContacts from "../../components/OfficialContacts";
 import type { OfficialContact } from "../../lib/risk";
+import { printDocument } from "../../lib/printDocument";
 import robotChat from "../../assets/Emergency/robot1.webp";
 import robotMagnifier from "../../assets/Emergency/robot2.webp";
 
@@ -163,41 +164,6 @@ async function writeToClipboard(text: string) {
   document.body.removeChild(textarea);
 }
 
-function printDocument(html: string) {
-  const printWindow = window.open("", "_blank", "width=900,height=1000");
-
-  if (printWindow) {
-    printWindow.document.open();
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.focus();
-    window.setTimeout(() => printWindow.print(), 300);
-    return;
-  }
-
-  const iframe = document.createElement("iframe");
-  iframe.style.position = "fixed";
-  iframe.style.right = "0";
-  iframe.style.bottom = "0";
-  iframe.style.width = "0";
-  iframe.style.height = "0";
-  iframe.style.border = "0";
-  document.body.appendChild(iframe);
-
-  const doc = iframe.contentWindow?.document;
-  if (!doc) return;
-
-  doc.open();
-  doc.write(html);
-  doc.close();
-
-  iframe.onload = () => {
-    iframe.contentWindow?.focus();
-    iframe.contentWindow?.print();
-    window.setTimeout(() => iframe.remove(), 1000);
-  };
-}
-
 type EmergencyReportViewProps = {
   kind: ReportKind;
 };
@@ -205,11 +171,15 @@ type EmergencyReportViewProps = {
 export default function EmergencyReportView({ kind }: EmergencyReportViewProps) {
   const copy = REPORT_COPY[kind];
   const location = useLocation();
-  const response = location.state?.result as EmergencyResult | undefined;
+  const routeState = location.state as
+    | { result?: EmergencyResult; draftCleanupError?: boolean }
+    | null;
+  const response = routeState?.result;
   const data = response?.result ?? response?.data ?? response;
 
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState("");
+  const [downloadError, setDownloadError] = useState("");
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
@@ -358,7 +328,11 @@ export default function EmergencyReportView({ kind }: EmergencyReportViewProps) 
 </body>
 </html>`;
 
-    printDocument(html);
+    setDownloadError(
+      printDocument(html)
+        ? ""
+        : "Dokumen tidak dapat dibuka untuk dicetak. Coba izinkan pop-up browser.",
+    );
   }
 
   return (
@@ -373,7 +347,46 @@ export default function EmergencyReportView({ kind }: EmergencyReportViewProps) 
         </p>
       </div>
 
-      <Stepper steps={STEPS} />
+      <ResultStepperBar
+        steps={STEPS}
+        backTo="/emergency"
+        backLabel="Darurat"
+        controlsClassName="max-w-[960px]"
+        confirmMessage={
+          data
+            ? "Laporan ini tidak disimpan di server. Unduh PDF terlebih dahulu jika ingin menyimpan hasilnya."
+            : undefined
+        }
+        action={
+          <button
+            type="button"
+            onClick={handleDownloadPdf}
+            className="inline-flex min-h-11 items-center gap-0 rounded-4xl bg-[#1F3A5F] px-3 py-2 text-[12.5px] font-semibold text-white shadow-sm shadow-[#8FA9C4]/20 transition hover:bg-[#172C49] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A56DB]/40 sm:gap-2 sm:px-3.5"
+          >
+            <PdfIcon className="h-4 w-4 shrink-0" />
+            <span className="sr-only sm:not-sr-only">Simpan Hasil</span>
+          </button>
+        }
+      />
+
+      {downloadError && (
+        <p
+          role="alert"
+          className="mx-auto mb-4 w-full max-w-[1080px] text-right text-sm text-danger-600"
+        >
+          {downloadError}
+        </p>
+      )}
+
+      {routeState?.draftCleanupError && (
+        <p
+          role="alert"
+          className="mx-auto mb-4 w-full max-w-[960px] rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        >
+          Draf sementara tidak berhasil dihapus dari sesi browser. Tutup tab
+          ini untuk menghapusnya.
+        </p>
+      )}
 
       <div className="reveal mx-auto mt-2 flex w-full max-w-[960px] flex-col gap-5">
         <section className="relative overflow-hidden rounded-4xl bg-white p-5 shadow-xl shadow-[#8FA9C4]/20 sm:p-7">
@@ -461,9 +474,6 @@ export default function EmergencyReportView({ kind }: EmergencyReportViewProps) 
               </div>
 
               <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <Button type="button" variant="sky" onClick={handleDownloadPdf}>
-                  Unduh PDF
-                </Button>
                 <Button type="button" variant="outline" onClick={handleCopy}>
                   {copied ? "Tersalin!" : "Salin Laporan"}
                 </Button>
@@ -536,5 +546,24 @@ export default function EmergencyReportView({ kind }: EmergencyReportViewProps) 
         </div>
       </div>
     </PageShell>
+  );
+}
+
+function PdfIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <path d="m7 10 5 5 5-5" />
+      <path d="M12 15V3" />
+    </svg>
   );
 }

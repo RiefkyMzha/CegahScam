@@ -33,7 +33,10 @@ function CheckIcon() {
  * Stepper bersama untuk semua alur (Analisis, Darurat, Laporan).
  * Lebar 720px agar sejajar dengan isi form.
  */
-export default function Stepper({ steps, className = "" }: StepperProps) {
+export default function Stepper({
+  steps,
+  className = "",
+}: StepperProps) {
   return (
     <ol
       className={`mx-auto my-4 flex w-full max-w-[720px] items-start justify-between gap-1.5 rounded-[18px] bg-white/40 px-3 py-3 shadow-lg sm:my-6 sm:gap-4 sm:rounded-full sm:px-8 sm:py-4 ${className}`}

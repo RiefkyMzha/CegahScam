@@ -1,6 +1,6 @@
 # Skema Bisnis dan Rancangan Database CegahScam
 
-Dokumen ini adalah rancangan awal model bisnis dan penyimpanan data CegahScam. Harga, kredit, masa berlaku kuota anonim, dan masa retensi operasional perlu diuji serta ditetapkan sebelum rilis. Prinsip utamanya: **konten laporan pengguna tidak disimpan; data akun dan transaksi minimum disimpan untuk menjalankan layanan berbayar.**
+Dokumen ini adalah rancangan awal model bisnis dan penyimpanan data CegahScam. Harga, kredit, masa berlaku kuota anonim, dan masa retensi operasional perlu diuji serta ditetapkan sebelum rilis. Prinsip utamanya: **konten laporan pengguna tidak disimpan di backend; data akun dan transaksi minimum disimpan untuk menjalankan layanan berbayar. Draf teks formulir boleh disimpan sementara di sesi tab browser untuk pemulihan setelah reload, lalu dibersihkan setelah berhasil dikirim atau sesi tab berakhir.**
 
 ## 1. Tujuan model bisnis
 
@@ -281,6 +281,7 @@ Operasi pencadangan/pengembalian kredit anonim harus atomik (misalnya Redis Lua 
 Zero retention dalam rancangan ini berlaku untuk **konten pengguna yang dikirim untuk dianalisis**, bukan seluruh data sistem:
 
 - Tidak menyimpan body request, file bukti, nomor telepon, kronologi, prompt, atau hasil AI di PostgreSQL, Redis, log, atau error tracker.
+- Formulir web dapat menyimpan teks yang belum dikirim sementara di `sessionStorage` tab untuk pemulihan setelah reload. Draf ini tidak dikirim ke backend sampai pengguna menekan submit, tidak mencakup file bukti, dan dihapus setelah request berhasil atau sesi tab berakhir; jangan menggantinya dengan `localStorage` persisten tanpa peninjauan kebijakan retensi dan pemberitahuan privasi.
 - ID anonim HMAC/Redis memiliki TTL yang diumumkan; data IP rate limit berumur jauh lebih singkat dan tidak dipakai sebagai identitas akun.
 - Metadata penggunaan yang terkait akun dipertahankan hanya selama diperlukan untuk dukungan, rekonsiliasi kredit, dan analisis biaya; setelah itu hapus atau agregasikan.
 - Data pembayaran/akun mengikuti retensi minimum yang diwajibkan payment gateway dan ketentuan hukum.

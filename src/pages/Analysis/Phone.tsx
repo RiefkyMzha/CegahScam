@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import AnalysisHook from "../../components/AnalysisHook";
+import BackLink from "../../components/BackLink";
+import DraftRestoredNotice from "../../components/DraftRestoredNotice";
 import PageShell from "../../components/ui/PageShell";
 import Stepper from "../../components/ui/Stepper";
 import FormSection from "../../components/ui/FormSection";
@@ -8,6 +10,20 @@ import { TextInput, FieldError } from "../../components/ui/Field";
 import Button from "../../components/ui/Button";
 import { apiUrl } from "../../lib/api";
 import LoadingOverlay from "../../components/LoadingOverlay";
+import {
+  clearSessionDraft,
+  getSessionDraftLeaveWarning,
+  hasSessionDraftContent,
+  readSessionDraft,
+  useBeforeUnloadWarning,
+  useSessionDraftWriter,
+} from "../../lib/sessionDraft";
+
+type PhoneDraft = {
+  nomorTelp: string;
+};
+
+const DRAFT_KEY = "analysis-phone";
 
 const STEPS = [
   { label: "Pilih Kasus", state: "done" as const },
@@ -16,11 +32,29 @@ const STEPS = [
 ];
 
 export default function Phone() {
-  const [nomorTelp, setNomorTelp] = useState("");
+  const [draftState] = useState(() => readSessionDraft<PhoneDraft>(DRAFT_KEY));
+  const draft = draftState.value;
+  const [nomorTelp, setNomorTelp] = useState(
+    typeof draft?.nomorTelp === "string" ? draft.nomorTelp : "",
+  );
   const [loading, setLoading] = useState(false);
   const [fieldError, setFieldError] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const isDirty = Boolean(nomorTelp);
+  const writeError = useSessionDraftWriter(DRAFT_KEY, { nomorTelp });
+  const storageError = draftState.error || writeError;
+  const restoredDraft = hasSessionDraftContent(draft);
+
+  useBeforeUnloadWarning(isDirty);
+
+  function discardDraft() {
+    if (!clearSessionDraft(DRAFT_KEY)) return false;
+    setNomorTelp("");
+    setFieldError("");
+    setError("");
+    return true;
+  }
 
   async function submitForm(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -56,7 +90,10 @@ export default function Phone() {
           data.message || "Terjadi kesalahan saat mengirim laporan.",
         );
       }
-      navigate("/analysis/resultphone", { state: { result: data } });
+      const draftCleanupError = !clearSessionDraft(DRAFT_KEY);
+      navigate("/analysis/resultphone", {
+        state: { result: data, subject: phoneNumber, draftCleanupError },
+      });
     } catch (error) {
       setError(
         error instanceof Error
@@ -75,6 +112,14 @@ export default function Phone() {
       <PageShell>
         <AnalysisHook />
         <Stepper steps={STEPS} />
+        <div className="mb-3 flex items-center justify-between gap-4">
+          <BackLink
+            to="/analysis"
+            label="Analisis"
+            compact
+            confirmMessage={isDirty ? getSessionDraftLeaveWarning(storageError, false) : undefined}
+          />
+        </div>
 
         <section id="body-input" className="reveal form-card">
           <div id="title" className="form-title">
@@ -82,6 +127,13 @@ export default function Phone() {
           </div>
 
           <form className="form-body" onSubmit={submitForm} noValidate>
+            {(restoredDraft || storageError) && (
+              <DraftRestoredNotice
+                savedAt={restoredDraft ? draftState.savedAt : null}
+                onDiscard={discardDraft}
+                storageError={storageError}
+              />
+            )}
             <FormSection index={1} title="Nomor Telepon" required>
               <TextInput
                 label="Nomor Telepon"

@@ -1,12 +1,14 @@
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import RiskGauge from "../../components/RiskGauge";
 import Robot from "../../components/Robot";
 import PageShell from "../../components/ui/PageShell";
-import Stepper from "../../components/ui/Stepper";
 import Button from "../../components/ui/Button";
+import ResultStepperBar from "../../components/ui/ResultStepperBar";
 import OfficialContacts from "../../components/OfficialContacts";
 import robot from "../../assets/Emergency/robot1.webp";
 import { getRisk, getRiskScore, type AnalysisResult } from "../../lib/risk";
+import { downloadAnalysisReport } from "../../lib/analysisReport";
 
 export type ResultKind = "chat" | "phone" | "screenshot";
 
@@ -35,7 +37,15 @@ type ResultViewProps = {
 export default function ResultView({ kind }: ResultViewProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const data = location.state?.result as AnalysisResult | undefined;
+  const [reportError, setReportError] = useState("");
+  const routeState = location.state as
+    | {
+        result?: AnalysisResult;
+        subject?: string;
+        draftCleanupError?: boolean;
+      }
+    | null;
+  const data = routeState?.result;
 
   if (!data) {
     return (
@@ -79,21 +89,72 @@ export default function ResultView({ kind }: ResultViewProps) {
   const callCenterDigits = FALLBACK_CONTACT.number.replace(/\D/g, "");
 
   const RiskIcon = kind === "chat" ? WarningIcon : InfoIcon;
+  const reportLabels = {
+    chat: "Pesan Chat",
+    phone: "Nomor Telepon",
+    screenshot: "Screenshot",
+  } as const;
+
+  function handleDownloadReport() {
+    const opened = downloadAnalysisReport({
+      kind,
+      label: reportLabels[kind],
+      score: skor,
+      levelLabel: risk.label,
+      scamType: data?.scam_type,
+      summary,
+      reasons,
+      recommendations,
+      subject: routeState?.subject,
+      contacts: officialContacts,
+    });
+
+    setReportError(
+      opened
+        ? ""
+        : "Jendela cetak diblokir browser. Izinkan pop-up lalu coba lagi.",
+    );
+  }
 
   return (
     <PageShell>
-      <div className="relative -top-6 mx-auto mb-0 flex w-full flex-col gap-1 lg:block">
-        <Link
-          to="/analysis"
-          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-[#446685] transition hover:text-[#1E40AF] lg:absolute lg:left-0 lg:top-1/2 lg:-translate-y-1/2"
+      <ResultStepperBar
+        steps={STEPS}
+        backTo="/analysis"
+        backLabel="Analisis"
+        className="mb-5"
+        controlsClassName="max-w-[1160px]"
+        confirmMessage="Hasil ini tidak disimpan di server. Simpan hasil sebagai PDF sebelum meninggalkan halaman jika ingin menyimpan salinannya."
+        action={
+          <button
+            type="button"
+            onClick={handleDownloadReport}
+            className="inline-flex min-h-11 items-center gap-0 rounded-4xl bg-[#1F3A5F] px-3 py-2 text-[12.5px] font-semibold text-white shadow-sm shadow-[#8FA9C4]/20 transition hover:bg-[#172C49] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A56DB]/40 sm:gap-2 sm:px-3.5"
+          >
+            <PdfIcon className="h-4 w-4 shrink-0" />
+            <span className="sr-only sm:not-sr-only">Simpan Hasil</span>
+          </button>
+        }
+      />
+
+      {routeState?.draftCleanupError && (
+        <p
+          role="alert"
+          className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
         >
-          <span aria-hidden="true">←</span> Analisis lagi
-        </Link>
-        <Stepper
-          steps={STEPS}
-          className="my-0 lg:mx-auto"
-        />
-      </div>
+          Draf sementara tidak berhasil dihapus dari sesi browser. Tutup tab
+          ini untuk menghapusnya.
+        </p>
+      )}
+
+      {reportError && (
+        <p
+          role="alert"
+          className="mx-auto mt-3 w-full max-w-[800px] text-right text-sm text-danger-600"
+        >
+          {reportError}
+        </p>
+      )}
 
       <div className="reveal grid gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-5 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
@@ -287,6 +348,25 @@ export default function ResultView({ kind }: ResultViewProps) {
         </div>
       </div>
     </PageShell>
+  );
+}
+
+function PdfIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <path d="m7 10 5 5 5-5" />
+      <path d="M12 15V3" />
+    </svg>
   );
 }
 

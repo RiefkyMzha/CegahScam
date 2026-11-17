@@ -1,6 +1,6 @@
 # Perbedaan Workspace dengan Repo Tim Web
 
-Acuan pembanding: [`njhbil/CegahScam`](https://github.com/njhbil/CegahScam), branch `main`, diperiksa 13 November 2026. Dokumen ini mencatat apa saja yang dimodifikasi di workspace dan saran untuk dipertimbangkan saat integrasi ke repo tim web.
+Acuan pembanding: [`njhbil/CegahScam`](https://github.com/njhbil/CegahScam), branch `main`, diperiksa pada commit `ecb95ab` (17 November 2026). Dokumen ini mencatat apa saja yang dimodifikasi di workspace dan saran untuk dipertimbangkan saat integrasi ke repo tim web.
 
 ## Modifikasi yang sudah ada di workspace
 
@@ -40,6 +40,11 @@ Acuan pembanding: [`njhbil/CegahScam`](https://github.com/njhbil/CegahScam), bra
 ### Hasil analisis dan kontak
 
 - Menggabungkan tiga tampilan hasil analisis ke `ResultView` dan memusatkan kategori risiko/skor di `src/lib/risk.ts`.
+- Hasil analisis kini dapat dicetak atau disimpan sebagai PDF dari browser. Konteks analisis diteruskan melalui state navigasi, dan dokumen dibuat di perangkat tanpa penyimpanan di backend.
+- Pada hasil analisis dan laporan darurat, stepper berada di atas tombol Kembali dan PDF yang tersusun di baris bawahnya. Tombol mengikuti lebar kartu hasil masing-masing, mengikuti gaya repo pembanding, tetap berlabel aksesibel pada layar kecil, dan tidak memiliki teks bantuan permanen di bawah tombol PDF.
+- Laporan darurat memiliki tombol kembali ke alur darurat dengan konfirmasi sebelum meninggalkan hasil, dan pesan kegagalan unduh PDF ditampilkan di dekat toolbar.
+- Isian teks form disimpan sementara di `sessionStorage` tab agar dapat dipulihkan setelah reload; draf dibersihkan setelah pengiriman berhasil atau sesi tab berakhir. File bukti tidak disimpan. Ini sengaja berbeda dari implementasi upstream yang memakai `localStorage` persisten agar sesuai dengan prinsip retensi pada rancangan database.
+- Form analisis dan darurat kini menawarkan konfirmasi navigasi saat ada isian; browser juga memberi peringatan saat tab/reload ditutup. Draf tetap berada di sesi tab jika pengguna membatalkan atau meninggalkan form.
 - Hasil yang dibuka tanpa state menampilkan empty state dan tombol untuk mengulang analisis, bukan skor risiko default.
 - Laporan memprioritaskan `official_contacts` (termasuk untuk laporan finansial) dan memakai field bank lama hanya sebagai fallback; hasil multi-bank menampilkan label ringkas agar nama bank tidak berulang.
 - `OfficialContacts` dipakai bersama pada hasil analisis dan laporan darurat; respons lama yang hanya memiliki `official_contact` tetap didukung.
@@ -53,8 +58,15 @@ Acuan pembanding: [`njhbil/CegahScam`](https://github.com/njhbil/CegahScam), bra
 - Menu mobile dapat ditutup dengan Escape atau klik di luar, mengunci scroll saat terbuka, dan tautannya tetap dapat ditekan karena dropdown termasuk dalam area menu.
 - Menambahkan halaman privasi dan route `/privasi`.
 - Merapikan jarak di Home dan Education; jarak heading ke konten pada section Home ditambah, sedangkan ruang kosong berlebih pada Education dikurangi.
+- Home kini memiliki section “Kenapa CegahScam?” yang menjelaskan alur bantuan, laporan siap disalin, tindak lanjut, dan penyimpanan draf yang sementara.
 - Menyesuaikan hover kartu dan tombol: tombol utama menggelap, tombol sekunder menggelap dengan teks terang, serta border biru saat hover dihilangkan atau dinetralkan. Warna khusus WhatsApp tetap hijau.
 - Merapikan layout laporan darurat dan menggunakan pola layout/stepper yang sama.
+- Komponen carousel khusus upstream tidak ditambahkan karena halaman Education workspace sudah memiliki pemilih contoh chat yang interaktif. `OfficialContactsCard` upstream juga tidak dipakai karena `OfficialContacts` workspace sudah mengikuti metadata kontak AI Service yang lebih baru.
+
+### Database dan retensi
+
+- Fitur draf hanya menyimpan teks sementara di sesi tab browser; tidak ada payload analisis atau laporan yang ditambahkan ke database, Redis, atau backend.
+- PostgreSQL, Redis, akun, wallet, dan pembayaran tetap rancangan/tahapan lanjutan pada `docs/skema-bisnis-dan-rancangan-database.md`, bukan integrasi aktif.
 
 ## Saran untuk repo tim web
 
@@ -71,5 +83,6 @@ Acuan pembanding: [`njhbil/CegahScam`](https://github.com/njhbil/CegahScam), bra
 - Upload dan error API: `server/src/upload.ts`, `server/src/app.ts`, `server/src/aiClient.ts`
 - Penyelarasan endpoint analisis: `src/pages/Analysis/Phone.tsx`, `src/pages/Analysis/Chat.tsx`, `server/src/controllers/analysis.controller.ts`
 - Hasil analisis dan kontak: `src/components/OfficialContacts.tsx`, `src/pages/ResultAnalysis/ResultView.tsx`, `src/pages/Report/EmergencyReportView.tsx`, `src/lib/risk.ts`
+- Draf sesi, navigasi, dan PDF: `src/lib/sessionDraft.ts`, `src/components/BackLink.tsx`, `src/components/DraftRestoredNotice.tsx`, `src/lib/analysisReport.ts`, `src/lib/printDocument.ts`
 - Home dan Education: `src/pages/Home.tsx`, `src/pages/Education.tsx`
 - Navbar, privasi, laporan: `src/components/Navbar.tsx`, `src/pages/Privacy.tsx`, `src/pages/Report/EmergencyReportView.tsx`

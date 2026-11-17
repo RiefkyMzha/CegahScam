@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { getLocalDateInputValue } from "../../lib/date";
+import BackLink from "../../components/BackLink";
+import DraftRestoredNotice from "../../components/DraftRestoredNotice";
 import EmergencyHook from "../../components/EmergencyHook";
 import PageShell from "../../components/ui/PageShell";
 import Stepper from "../../components/ui/Stepper";
@@ -16,6 +18,14 @@ import UploadField from "../../components/ui/UploadField";
 import Button from "../../components/ui/Button";
 import { apiUrl } from "../../lib/api";
 import LoadingOverlay from "../../components/LoadingOverlay";
+import {
+  clearSessionDraft,
+  getSessionDraftLeaveWarning,
+  hasSessionDraftContent,
+  readSessionDraft,
+  useBeforeUnloadWarning,
+  useSessionDraftWriter,
+} from "../../lib/sessionDraft";
 
 const STEPS = [
   { label: "Pilih Kasus", state: "done" as const },
@@ -61,6 +71,21 @@ type Errors = {
   form?: string;
 };
 
+type FinancialDraft = {
+  jenisBank: string;
+  jenisBankLain: string;
+  kanalMedia: string;
+  tanggalKejadian: string;
+  tujuanTransaksi: string[];
+  tujuanTransaksiLain: string;
+  namaInstitusi: string;
+  nomorRekening: string;
+  namaPemilikRekening: string;
+  nominalKerugian: string;
+  detailKronologi: string;
+};
+
+const DRAFT_KEY = "emergency-financial";
 const today = getLocalDateInputValue();
 
 function formatRupiah(digits: string) {
@@ -69,21 +94,97 @@ function formatRupiah(digits: string) {
 }
 
 export default function Financial() {
+  const [draftState] = useState(() => readSessionDraft<FinancialDraft>(DRAFT_KEY));
+  const draft = draftState.value;
   const [fileBukti, setFileBukti] = useState<File | null>(null);
-  const [jenisBank, setJenisBank] = useState("");
-  const [jenisBankLain, setJenisBankLain] = useState("");
-  const [kanalMedia, setKanalMedia] = useState("");
-  const [tanggalKejadian, setTanggalKejadian] = useState("");
-  const [tujuanTransaksi, setTujuanTransaksi] = useState<string[]>([]);
-  const [tujuanTransaksiLain, setTujuanTransaksiLain] = useState("");
-  const [namaInstitusi, setNamaInstitusi] = useState("");
-  const [nomorRekening, setNomorRekening] = useState("");
-  const [namaPemilikRekening, setNamaPemilikRekening] = useState("");
-  const [nominalKerugian, setNominalKerugian] = useState("");
-  const [detailKronologi, setDetailKronologi] = useState("");
+  const [jenisBank, setJenisBank] = useState(
+    typeof draft?.jenisBank === "string" ? draft.jenisBank : "",
+  );
+  const [jenisBankLain, setJenisBankLain] = useState(
+    typeof draft?.jenisBankLain === "string" ? draft.jenisBankLain : "",
+  );
+  const [kanalMedia, setKanalMedia] = useState(
+    typeof draft?.kanalMedia === "string" ? draft.kanalMedia : "",
+  );
+  const [tanggalKejadian, setTanggalKejadian] = useState(
+    typeof draft?.tanggalKejadian === "string" ? draft.tanggalKejadian : "",
+  );
+  const [tujuanTransaksi, setTujuanTransaksi] = useState<string[]>(
+    Array.isArray(draft?.tujuanTransaksi) ? draft.tujuanTransaksi : [],
+  );
+  const [tujuanTransaksiLain, setTujuanTransaksiLain] = useState(
+    typeof draft?.tujuanTransaksiLain === "string"
+      ? draft.tujuanTransaksiLain
+      : "",
+  );
+  const [namaInstitusi, setNamaInstitusi] = useState(
+    typeof draft?.namaInstitusi === "string" ? draft.namaInstitusi : "",
+  );
+  const [nomorRekening, setNomorRekening] = useState(
+    typeof draft?.nomorRekening === "string" ? draft.nomorRekening : "",
+  );
+  const [namaPemilikRekening, setNamaPemilikRekening] = useState(
+    typeof draft?.namaPemilikRekening === "string"
+      ? draft.namaPemilikRekening
+      : "",
+  );
+  const [nominalKerugian, setNominalKerugian] = useState(
+    typeof draft?.nominalKerugian === "string" ? draft.nominalKerugian : "",
+  );
+  const [detailKronologi, setDetailKronologi] = useState(
+    typeof draft?.detailKronologi === "string" ? draft.detailKronologi : "",
+  );
   const [errors, setErrors] = useState<Errors>({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const isDirty = Boolean(
+    fileBukti ||
+      jenisBank ||
+      jenisBankLain ||
+      kanalMedia ||
+      tanggalKejadian ||
+      tujuanTransaksi.length ||
+      tujuanTransaksiLain ||
+      namaInstitusi ||
+      nomorRekening ||
+      namaPemilikRekening ||
+      nominalKerugian ||
+      detailKronologi,
+  );
+  const writeError = useSessionDraftWriter(DRAFT_KEY, {
+    jenisBank,
+    jenisBankLain,
+    kanalMedia,
+    tanggalKejadian,
+    tujuanTransaksi,
+    tujuanTransaksiLain,
+    namaInstitusi,
+    nomorRekening,
+    namaPemilikRekening,
+    nominalKerugian,
+    detailKronologi,
+  });
+  const storageError = draftState.error || writeError;
+  const restoredDraft = hasSessionDraftContent(draft);
+  useBeforeUnloadWarning(isDirty);
+
+  function discardDraft() {
+    if (!clearSessionDraft(DRAFT_KEY)) return false;
+    setJenisBank("");
+    setJenisBankLain("");
+    setKanalMedia("");
+    setTanggalKejadian("");
+    setTujuanTransaksi([]);
+    setTujuanTransaksiLain("");
+    setNamaInstitusi("");
+    setNomorRekening("");
+    setNamaPemilikRekening("");
+    setNominalKerugian("");
+    setDetailKronologi("");
+    setFileBukti(null);
+    setErrors({});
+    return true;
+  }
 
   function toggleTujuan(value: string) {
     setTujuanTransaksi((prev) =>
@@ -191,7 +292,10 @@ export default function Financial() {
           data.message || "Terjadi kesalahan saat mengirim laporan.",
         );
       }
-      navigate("/report/financial", { state: { result: data } });
+      const draftCleanupError = !clearSessionDraft(DRAFT_KEY);
+      navigate("/report/financial", {
+        state: { result: data, draftCleanupError },
+      });
     } catch (error) {
       setErrors({
         form:
@@ -211,6 +315,14 @@ export default function Financial() {
       <PageShell>
         <EmergencyHook />
         <Stepper steps={STEPS} />
+        <div className="mb-3 flex items-center justify-between gap-4">
+          <BackLink
+            to="/emergency"
+            label="Darurat"
+            compact
+            confirmMessage={isDirty ? getSessionDraftLeaveWarning(storageError, true) : undefined}
+          />
+        </div>
 
         <section id="body-input" className="reveal form-card">
           <div id="title" className="form-title">
@@ -218,6 +330,13 @@ export default function Financial() {
           </div>
 
           <form className="form-body" onSubmit={handleSubmit} noValidate>
+            {(restoredDraft || storageError) && (
+              <DraftRestoredNotice
+                savedAt={restoredDraft ? draftState.savedAt : null}
+                onDiscard={discardDraft}
+                storageError={storageError}
+              />
+            )}
             <FormSection
               id="section-bank"
               index={1}
